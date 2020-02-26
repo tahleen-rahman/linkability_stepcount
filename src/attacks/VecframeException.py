@@ -1,0 +1,3 @@
+
+class VecframeException(Exception):
+    pass
