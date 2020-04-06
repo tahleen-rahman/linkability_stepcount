@@ -4,7 +4,7 @@
 import logging
 import math
 
-from tensorflow import keras
+import keras
 from keras.layers import Dropout, Dense, Conv1D, MaxPooling1D, Flatten, Reshape, LSTM
 from keras import Sequential, utils, Input, Model
 from keras.utils.vis_utils import plot_model
@@ -190,7 +190,7 @@ class LSTMsiameseClassifier(siameseClassifier):
 
             units = int(math.floor(num_features * param[0]) if num_features >= 4 else 1)
 
-            shared_nn.add(LSTM(units, input_shape=(num_features, 1)))
+            shared_nn.add(LSTM(units, input_shape=(num_features * param[0] * 2, 1)))
             shared_nn.add(Dropout(param[1]))
 
         self.l_a = shared_nn(self.sample_a)

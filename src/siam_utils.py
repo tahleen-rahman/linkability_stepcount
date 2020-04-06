@@ -81,7 +81,7 @@ def linkability_siam(epochs, regu, batchsize, combi, inpath, params, exp, cl, da
 
                 elif cl == 'lstm':
 
-                    clf = LSTMsiameseClassifier(link.vecframe.shape[1] - 2, combi, lstm_params=params)
+                    clf = LSTMsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, lstm_params=params)
 
                 elif cl == 'dense':
 
@@ -89,9 +89,9 @@ def linkability_siam(epochs, regu, batchsize, combi, inpath, params, exp, cl, da
 
                 clf.combine()
 
-                auc = clf.fit_predict(link, batchsize, epochs, verbose=2)
+                auc = clf.fit_predict(link, batchsize, epochs, verbose=0)
 
-                print(infile, auc)
+                print(infile, i, auc)
 
                 aucarr.append(auc)
 
