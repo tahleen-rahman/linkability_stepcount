@@ -18,4 +18,4 @@ clfdict = { 'lstm' : ([[0.5, 0.2], [0.25, 0.2]]),  # list of size = num of lstm 
 
 params = clfdict[cl]
 
-linkability_siam(epochs, regu, batchsize, combi, path, params, exp, cl)
+linkability_siam(epochs, regu, batchsize, combi, path, params, exp, cl, datapath="../../stepcount/data/dzne/")

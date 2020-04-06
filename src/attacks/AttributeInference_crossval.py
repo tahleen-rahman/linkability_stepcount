@@ -341,30 +341,39 @@ class AttributeInferenceCV(Attack):
 
     def attack(self, clf):
 
-        train_ = pd.read_csv(self.out_datapath + self.train_fname, index_col=0)
-        test_ =  pd.read_csv(self.out_datapath + self.test_fname, index_col=0)
+        aucarr=[]
+
+        for i in range(0,5):
+
+            train_ = pd.read_csv(self.out_datapath +  str(i) + '/' + self.train_fname, index_col=0)
+            test_ =  pd.read_csv(self.out_datapath  + str(i) + '/' + self.test_fname, index_col=0)
 
 
-        X_train, y_train = train_.iloc[:, 2:-3].values, train_[self.attribute].values
-        X_test, y_test = test_.iloc[:, 2:-3].values, test_[self.attribute].values
+            X_train, y_train = train_.iloc[:, 2:-3].values, train_[self.attribute].values
+            X_test, y_test = test_.iloc[:, 2:-3].values, test_[self.attribute].values
 
 
-        clf.fit(X_train, y_train)
+            clf.fit(X_train, y_train)
 
-        pred_ = clf.predict(X_test)
+            pred_ = clf.predict(X_test)
 
 
 
-        from sklearn.metrics import roc_auc_score
+            from sklearn.metrics import roc_auc_score
 
-        auc = roc_auc_score(y_test, pred_)
+            auc = roc_auc_score(y_test, pred_)
 
-        if auc >= 0.5:
-            print(self.vf_fname +',' , auc)
-        else:
-            print(self.vf_fname +',' , 1 - auc)
+            if auc >= 0.5:
+                print(self.vf_fname +',' , auc)
 
-        return auc
+                aucarr.append(auc)
+            else:
+                print(self.vf_fname +',' , 1 - auc)
+
+                aucarr.append(1-auc)
+
+        return aucarr
+
 
 
     def attack_activities(self, clf,  th = 0.5):

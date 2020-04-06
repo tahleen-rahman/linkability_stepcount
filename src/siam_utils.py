@@ -40,17 +40,18 @@ def add_padding(vf, padding):
     return df
 
 
-def linkability_siam(epochs, regu, batchsize, combi, path, params, exp, cl):
+def linkability_siam(epochs, regu, batchsize, combi, inpath, params, exp, cl, datapath = "../data/dzne/"):
     """
 
     :param epochs:
     :param regu:
     :param batchsize:
     :param combi:
-    :param path:
+    :param inpath:
     :param params:
     :param exp:
     :param cl:
+    :param datapath :
     :return:
     """
 
@@ -60,13 +61,13 @@ def linkability_siam(epochs, regu, batchsize, combi, path, params, exp, cl):
 
     arr, aucarr = [], []
 
-    for infile in os.listdir("../data/dzne/" + path):
+    for infile in os.listdir("../data/dzne/" + inpath):
 
         for i in range(0, 5):
 
             try:
 
-                link = Link(i, infile, weekends=weekend, in_datapath='../data/dzne/' + path + '/')
+                link = Link(i, infile, weekends=weekend, in_datapath=datapath + inpath + '/', out_datapath = datapath)
 
                 from sklearn.utils import shuffle
 
@@ -106,6 +107,6 @@ def linkability_siam(epochs, regu, batchsize, combi, path, params, exp, cl):
 
     aucs = pd.DataFrame(data=arr)  # , names= epochs, regu,  batchsize, i, infile, auc
 
-    aucs.to_csv("../data/dzne/results/" + aucfname, mode='a', header=False, index=False)
+    aucs.to_csv(datapath + "results/" + aucfname, mode='a', header=False, index=False)
 
-    print("saved AUCs to ../data/dzne/results/" + aucfname)
+    print("saved AUCs to " + datapath +" results/" + aucfname)
