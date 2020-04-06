@@ -177,6 +177,24 @@ class Dense_siameseClassifier(siameseClassifier):
 
 
 
+class LSTMsiameseClassifier(siameseClassifier):
+
+    def __init__(self, num_features, regu, combi, lstm_params):
+        super().__init__(num_features, regu, combi)
+
+        shared_nn = Sequential()
+
+        shared_nn.add(Reshape((num_features, 1), input_shape=(num_features,)))
+
+        for param in lstm_params:
+
+            units = int(math.floor(num_features * param[0]) if num_features >= 4 else 1)
+
+            shared_nn.add(LSTM(units, input_shape=(num_features, 1)))
+            shared_nn.add(Dropout(param[1]))
+
+        self.l_a = shared_nn(self.sample_a)
+        self.l_b = shared_nn(self.sample_b)
 
 
 def tensorabs(t):
@@ -220,26 +238,4 @@ class CNNsiameseClassifier(siameseClassifier):
 
 
 
-
-
-class LSTMsiameseClassifier(siameseClassifier):
-
-    def __init__(self, num_features, regu, combi, lstm_params):
-
-        super().__init__(num_features, regu, combi)
-
-
-        shared_nn = Sequential()
-
-        shared_nn.add(Reshape((num_features, 1), input_shape=(num_features,)))
-
-
-        for units, dropout in lstm_params:
-
-            shared_nn.add(LSTM(units, input_shape= (num_features, 1)))
-            shared_nn.add(Dropout(dropout))
-
-
-        self.l_a = shared_nn(self.sample_a)
-        self.l_b = shared_nn(self.sample_b)
 
