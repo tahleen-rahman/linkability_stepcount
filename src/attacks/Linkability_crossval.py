@@ -26,8 +26,8 @@ class Link(Attack):
         assert('dsp' in self.vf_fname)
         assert('week' not in self.vf_fname)
 
-        i = str(i)
-        self.out_datapath = out_datapath + i + '/'
+
+        self.out_datapath = out_datapath + str(i) + '/'
         if not os.path.exists(self.out_datapath):
             os.makedirs(self.out_datapath)
 
@@ -47,10 +47,14 @@ class Link(Attack):
             self.te_pairsfilepath = self.out_datapath + "noweekend_te_pairs.csv"
 
 
-        if not (os.path.exists(self.tr_pairsfilepath) and os.path.exists(self.te_pairsfilepath)):
+        if not (os.path.exists(self.pairsfilepath) and os.path.exists(self.tr_pairsfilepath) and os.path.exists(self.te_pairsfilepath)):
+
+            print ('making', self.pairsfilepath)
+            true_df, false_df = self.makePairs()
 
             print ('making', self.tr_pairsfilepath , 'and', self.te_pairsfilepath)
-            self.makePairs()
+            self.train_test_folds(i, true_df, false_df)
+
 
         self.tr_pairs = pd.read_csv(self.tr_pairsfilepath)
         self.te_pairs = pd.read_csv(self.te_pairsfilepath)
@@ -113,13 +117,23 @@ class Link(Attack):
         pairs.to_csv(self.pairsfilepath, index=False)
         print (len(pairs), "pairs made")
 
+        return true_df, false_df
 
 
-        tr_tru = true_df.sample(frac=0.8)
-        te_tru = true_df.drop(tr_tru.index)
+    def train_test_folds(self, fold, true_df, false_df):
+        """
+        split pairs for cross val into train and test sets
+        :param fold:
+        :param true_df:
+        :param false_df:
+        :return:
+        """
 
-        tr_fal = false_df.sample(frac=0.8)
-        te_fal = false_df.drop(tr_fal.index)
+        te_tru = true_df[fold* int(0.2 * len(true_df)) : (fold+ 1) * int(0.2 * len(true_df))]
+        tr_tru = true_df.drop(te_tru.index)
+
+        te_fal = false_df[fold* int(0.2 * len(false_df)) : (fold+ 1) * int(0.2 * len(false_df))]
+        tr_fal = false_df.drop(te_fal.index)
 
         tr_pairs = tr_tru.append(tr_fal)
         te_pairs = te_tru.append(te_fal)
@@ -130,6 +144,11 @@ class Link(Attack):
 
 
     def prep_data(self, combi):
+        """
+        for the random forest baseline attack
+        :param combi:
+        :return:
+        """
 
         def combine(u,v):
 
@@ -183,6 +202,11 @@ class Link(Attack):
 
 
     def prep_data_unsup(self, combi):
+        """
+        for the unsupevised attack
+        :param combi:
+        :return:
+        """
 
         def combine(u, v):
 
@@ -208,6 +232,11 @@ class Link(Attack):
 
 
     def attack(self, clf):
+        """
+        random forest bl attack
+        :param clf:
+        :return:
+        """
 
         train_ = pd.read_csv(self.tr_data_fp, index_col=0)
         test_ = pd.read_csv(self.te_data_fp, index_col=0)
@@ -223,6 +252,11 @@ class Link(Attack):
 
 
     def unsup_attack(self,):
+        """
+        for the unsupevised attack
+
+        :return:
+        """
 
         train_ = pd.read_csv(self.unsup_data_fp, index_col=0)
 

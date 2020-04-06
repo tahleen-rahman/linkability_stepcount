@@ -9,7 +9,7 @@ import sys
 import pandas as pd
 
 from attacks.kerasclassifier2 import *
-from attacks.Linkability import Link
+from attacks.Linkability_crossval import Link
 
 
 def add_padding(vf, padding):
@@ -57,11 +57,11 @@ def linkability_siam(epochs, regu, batchsize, combi, inpath, params, exp, cl, da
 
     weekend = True
 
-    aucfname = "clf_" + str(cl) + "exp_" + str(exp) + "_cv_siam.csv"
+    aucfname = "clf_" + str(cl) + "_exp_" + str(exp) + "_cv_siam.csv"
 
     arr, aucarr = [], []
 
-    for infile in os.listdir("../data/dzne/" + inpath):
+    for infile in os.listdir(datapath + inpath):
 
         for i in range(0, 5):
 
