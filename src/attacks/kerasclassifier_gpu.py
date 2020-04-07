@@ -186,25 +186,12 @@ class LSTMsiameseClassifier(siameseClassifier):
 
         shared_nn.add(Reshape((num_features, 1), input_shape=(num_features,)))
 
-        if len(lstm_params)==2:
+        for param in lstm_params:
 
-            param_0 = lstm_params[0]
-            units = int(math.floor(num_features * param_0[0]) if num_features >= 4 else 1)
-            shared_nn.add(LSTM(units, return_sequences=True, input_shape=(num_features, 1)))
-            shared_nn.add(Dropout(param_0[1]))
+            units = int(math.floor(num_features * param[0]) if num_features >= 4 else 1)
 
-            param_1 = lstm_params[1]
-            units = int(math.floor(num_features * param_1[0]) if num_features >= 4 else 1)
-            shared_nn.add(LSTM(units))
-            shared_nn.add(Dropout(param_1[1]))
-
-        elif len(lstm_params)==1:
-
-            param_0 = lstm_params[0]
-            units = int(math.floor(num_features * param_0[0]) if num_features >= 4 else 1)
-            shared_nn.add(LSTM(units,input_shape=(num_features, 1)))
-            shared_nn.add(Dropout(param_0[1]))
-
+            shared_nn.add(LSTM(units, input_shape=(num_features, 1)))
+            shared_nn.add(Dropout(param[1]))
 
         self.l_a = shared_nn(self.sample_a)
         self.l_b = shared_nn(self.sample_b)

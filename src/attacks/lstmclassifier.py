@@ -9,7 +9,7 @@ from attacks import BinaryDNN
 
 class LSTMclassifier(BinaryDNN):
 
-    def __init__(self,  num_layers = 1, layer_params=[[100, 0.2]], num_epochs=100, batch_size=16, verbose=1):
+    def __init__(self,  num_layers, layer_params, num_epochs=100, batch_size=16, verbose=1):
 
         super().__init__(num_layers, layer_params, num_epochs, batch_size, verbose)
 
@@ -23,9 +23,21 @@ class LSTMclassifier(BinaryDNN):
         """the input part of your training data (X) must be a three-dimensional array 
         with the dimensions [samples][timesteps][features], and you must have at least one sample, one time step and one feature.
         """
-        for units, dropout in self.layer_params:
 
-            model.add(LSTM(units, input_shape= (X_train.shape[1], 1))) # (shape = timesteps, features)
+        if len(self.layer_params)==1:
+
+            units, dropout = self.layer_params[0][0], self.layer_params[0][1]
+            model.add(LSTM(units, input_shape = (X_train.shape[1], 1))) # (shape = timesteps, features)
+            model.add(Dropout(dropout))
+
+        elif len(self.layer_params)==2:
+
+            units, dropout = self.layer_params[0][0], self.layer_params[0][1]
+            model.add(LSTM(units, return_sequences=True, input_shape = (X_train.shape[1], 1))) # (shape = timesteps, features)
+            model.add(Dropout(dropout))
+
+            units, dropout = self.layer_params[1][0], self.layer_params[1][1]
+            model.add(LSTM(units)) # (shape = timesteps, features)
             model.add(Dropout(dropout))
 
 

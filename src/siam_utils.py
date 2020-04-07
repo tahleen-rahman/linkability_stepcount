@@ -59,13 +59,15 @@ def linkability_siam(epochs, regu, batchsize, combi, inpath, params, exp, cl, da
 
     aucfname = "clf_" + str(cl) + "_exp_" + str(exp) + "_cv_siam.csv"
 
-    arr, aucarr = [], []
+     #aucarr = []
 
     for infile in os.listdir(datapath + inpath):
 
+        arr=[]
+
         for i in range(0, 5):
 
-            try:
+            #try:
 
                 link = Link(i, infile, weekends=weekend, in_datapath=datapath + inpath + '/', out_datapath = datapath)
 
@@ -73,13 +75,14 @@ def linkability_siam(epochs, regu, batchsize, combi, inpath, params, exp, cl, da
 
                 link.tr_pairs = shuffle(link.tr_pairs)
 
+                #first define the shared layers
                 if cl == 'cnn1' or cl == 'cnn2':
 
                     link.vecframe = add_padding(link.vecframe, padding=params[2] ** params[3])
 
                     clf = CNNsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, params, num_maxpools=params[3])
 
-                elif cl == 'lstm':
+                elif cl == 'lstm1' or cl == 'lstm2':
 
                     clf = LSTMsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, lstm_params=params)
 
@@ -87,26 +90,28 @@ def linkability_siam(epochs, regu, batchsize, combi, inpath, params, exp, cl, da
 
                     clf = Dense_siameseClassifier(link.vecframe.shape[1] - 2, regu, combi, params)
 
-                clf.combine()
+                #Next combine the layers
+                clf.combine(plot=False)
 
                 auc = clf.fit_predict(link, batchsize, epochs, verbose=0)
 
                 print(infile, i, auc)
 
-                aucarr.append(auc)
+                #aucarr.append(auc)
 
                 arr.append([epochs, regu, batchsize, i, infile, auc])
 
                 del clf
 
-            except:
+            #except:
 
-                print("infile skipped", infile)
+                #print("infile skipped", infile)
 
-    print(aucarr)
+        aucs = pd.DataFrame(data=arr)  # , names= epochs, regu,  batchsize, i, infile, auc
 
-    aucs = pd.DataFrame(data=arr)  # , names= epochs, regu,  batchsize, i, infile, auc
+        aucs.to_csv(datapath + "results/" + aucfname, mode='a', header=False, index=False)
 
-    aucs.to_csv(datapath + "results/" + aucfname, mode='a', header=False, index=False)
+        print("saved AUCs to " + datapath +" results/" + aucfname)
+    #print(aucarr)
 
-    print("saved AUCs to " + datapath +" results/" + aucfname)
+

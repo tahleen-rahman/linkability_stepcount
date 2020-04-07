@@ -4,6 +4,7 @@ from .Matching import Matching
 from .Reidentification import Reidentification
 from .VecframeException import VecframeException
 from .AttributeInference_crossval import AttributeInferenceCV
+from .AttributeInference import AttributeInference
 from .CdnnClassifier import CdnnClassifier
 from .CNNKerasClassifier import CNNKerasClassifier
 from .kerasclassifier2 import CNNsiameseClassifier
