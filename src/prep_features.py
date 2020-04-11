@@ -56,19 +56,21 @@ def variance_thresholding(in_dir, th=0.0, outpath=None):
 
         if 'nor' in infile: #for normalized files only
 
-            vf = load_frame(infile, in_path)
-            check_if_vecframe(vf)
+            if not os.path.exists(in_path + infile[:-4] + "_vt" + str(th)):
 
-            # user and desc columns always have high variance so no need to remove here
-            sel.fit(vf)
+                vf = load_frame(infile, in_path)
+                check_if_vecframe(vf)
 
-            vt = vf[vf.columns[sel.get_support(indices=True)]]
+                # user and desc columns always have high variance so no need to remove here
+                sel.fit(vf)
 
-            if outpath == None:
-                outpath = in_path
+                vt = vf[vf.columns[sel.get_support(indices=True)]]
 
-            dump_frame(vt, infile[:-4] + "_vt" + str(th), outpath, False)
-            print (infile, vf.shape, vt.shape)
+                if outpath == None:
+                    outpath = in_path
+
+                dump_frame(vt, infile[:-4] + "_vt" + str(th), outpath, False)
+                print (infile, vf.shape, vt.shape)
 
 
 

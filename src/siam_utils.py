@@ -84,11 +84,11 @@ def linkability_siam(epochs, regu, batchsize, combi, in_dir, params, exp, cl, da
 
                 elif cl == 'lstm1':
 
-                    clf = LSTMsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, lstm_params=params, fixed_units=True)
-
-                elif cl == 'lstm2':
-
                     clf = LSTMsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, lstm_params=params, fixed_units=False)
+
+                elif cl == 'lstm2' or cl == 'lstm3':
+
+                    clf = LSTMsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, lstm_params=params, fixed_units=True)
 
                 elif cl == 'dense':
 

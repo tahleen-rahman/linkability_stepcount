@@ -1,7 +1,6 @@
 # __init__.py
 
 from .Compressor import Compressor
-from .CompressorException import CompressorException
 from .PytorchAE import PytorchAE
 from .LSTM_AE import LSTM_AE
 from .PCA_AE  import PCA_AE

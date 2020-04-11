@@ -4,7 +4,6 @@ import pandas as pd
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
-import compress.CompressorException
 from utils.storage import load_frame, dump_frame, check_if_vecframe, DATA_PATH
 
 
