@@ -35,9 +35,12 @@ clfdict = { 'lstm1' : ([[0.5, 0.2]]),  # list of size = num of lstm layers [lstm
 
 params = clfdict[cl]
 
+
+datapath="../../stepcount/data/dzne/"
+
 from prep_features import variance_thresholding
-variance_thresholding(in_dir, th=var_th)
+variance_thresholding(datapath, in_dir, th=var_th)
 
 
-linkability_siam(epochs, regu, batchsize, combi, in_dir, params, exp, cl, datapath="../../stepcount/data/dzne/")
+linkability_siam(epochs, regu, batchsize, combi, in_dir, params, exp, cl, datapath)
 

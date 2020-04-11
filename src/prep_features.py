@@ -5,7 +5,6 @@ from sklearn.feature_selection import VarianceThreshold
 from compress import Statistics
 from itertools import combinations, chain
 from utils.data_parser import normalize_vecframe_by_col, load_frame, check_if_vecframe, dump_frame
-from utils.storage import DATA_PATH
 
 
 
@@ -46,7 +45,7 @@ def normalize(inpath, norm_path):
         normalize_vecframe_by_col(infile, in_path=inpath, out_path=norm_path)
 
 
-def variance_thresholding(in_dir, th=0.0, outpath=None):
+def variance_thresholding(DATA_PATH, in_dir, th=0.0, outpath=None):
 
     sel = VarianceThreshold(th)
 
@@ -76,7 +75,7 @@ def variance_thresholding(in_dir, th=0.0, outpath=None):
 
 
 
-def prep_all():
+def prep_all(DATA_PATH):
 
     stats_datapath = DATA_PATH +  "statistics/"
 
@@ -84,7 +83,7 @@ def prep_all():
 
     norm_dir =  "normalized/"
 
-    normalize(stats_datapath, DATA_PATH+ norm_dir)
+    normalize(stats_datapath, DATA_PATH + norm_dir)
 
     #outpath = DATA_PATH + "var_th_norm/"
 
@@ -96,4 +95,4 @@ def prep_all():
 
 if __name__ == '__main__':
 
-    prep_all()
+    prep_all(DATA_PATH='../data/dzne/')
