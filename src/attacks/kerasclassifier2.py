@@ -11,6 +11,11 @@ from keras.utils.vis_utils import plot_model
 #if tf.__version__ != '2.1.0':
     #import keras.layers.CuDNNLSTM
 
+k_init = keras.initializers.Constant(value=0.1)
+b_init = keras.initializers.Constant(value=0)
+r_init = keras.initializers.Constant(value=0.1)
+
+
 class BinaryDNN:
 
     def __init__(self, num_layers = 2, layer_params=[[0.5, 0.2], [0.25, 0]], num_epochs=100, batch_size=24, verbose=1):
@@ -179,7 +184,7 @@ class Dense_siameseClassifier(siameseClassifier):
 
 class LSTMsiameseClassifier(siameseClassifier):
 
-    def __init__(self, num_features, regu, combi, lstm_params):
+    def __init__(self, num_features, regu, combi, lstm_params, fixed_units=True):
         super().__init__(num_features, regu, combi)
 
         shared_nn = Sequential()
@@ -189,25 +194,36 @@ class LSTMsiameseClassifier(siameseClassifier):
         if len(lstm_params)==2:
 
             param_0 = lstm_params[0]
-            units = int(math.floor(num_features * param_0[0]) if num_features >= 4 else 1)
-            shared_nn.add(LSTM(units, return_sequences=True, input_shape=(num_features, 1)))
+
+            units = param_0[0] if fixed_units else (int(math.floor(num_features * param_0[0])) if num_features >= 4 else 1)
+
+            shared_nn.add(LSTM(units, return_sequences=True, input_shape=(num_features, 1),\
+                               kernel_initializer=k_init, bias_initializer=b_init, recurrent_initializer=r_init))
             shared_nn.add(Dropout(param_0[1]))
 
             param_1 = lstm_params[1]
-            units = int(math.floor(num_features * param_1[0]) if num_features >= 4 else 1)
-            shared_nn.add(LSTM(units))
+            units = param_1[0] if fixed_units else (int(math.floor(num_features * param_1[0])) if num_features >= 4 else 1)
+
+            shared_nn.add(LSTM(units, kernel_initializer=k_init, bias_initializer=b_init, recurrent_initializer=r_init))
             shared_nn.add(Dropout(param_1[1]))
 
         elif len(lstm_params)==1:
 
             param_0 = lstm_params[0]
-            units = int(math.floor(num_features * param_0[0]) if num_features >= 4 else 1)
-            shared_nn.add(LSTM(units,input_shape=(num_features, 1)))
+
+            units = param_0[0] if fixed_units else (int(math.floor(num_features * param_0[0])) if num_features >= 4 else 1)
+
+            shared_nn.add(LSTM(units,input_shape=(num_features, 1), \
+                               kernel_initializer=k_init, bias_initializer=b_init, recurrent_initializer=r_init))
             shared_nn.add(Dropout(param_0[1]))
 
 
         self.l_a = shared_nn(self.sample_a)
         self.l_b = shared_nn(self.sample_b)
+
+
+
+
 
 
 def tensorabs(t):

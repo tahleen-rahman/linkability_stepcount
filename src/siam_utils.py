@@ -40,14 +40,14 @@ def add_padding(vf, padding):
     return df
 
 
-def linkability_siam(epochs, regu, batchsize, combi, inpath, params, exp, cl, datapath = "../data/dzne/"):
+def linkability_siam(epochs, regu, batchsize, combi, in_dir, params, exp, cl, datapath = "../data/dzne/"):
     """
 
     :param epochs:
     :param regu:
     :param batchsize:
     :param combi:
-    :param inpath:
+    :param in_dir:
     :param params:
     :param exp:
     :param cl:
@@ -61,19 +61,19 @@ def linkability_siam(epochs, regu, batchsize, combi, inpath, params, exp, cl, da
 
      #aucarr = []
 
-    for infile in os.listdir(datapath + inpath):
+    for infile in os.listdir(datapath + in_dir):
 
         arr=[]
 
         for i in range(0, 5):
 
             #try:
+            if 'vt' in infile and 'nor' in infile: #only use variance thresholded and normalized files
 
-                link = Link(i, infile, weekends=weekend, in_datapath=datapath + inpath + '/', out_datapath = datapath)
+                link = Link(i, infile, weekends=weekend, in_datapath=datapath + in_dir + '/', out_datapath = datapath)
 
-                from sklearn.utils import shuffle
-
-                link.tr_pairs = shuffle(link.tr_pairs)
+                #from sklearn.utils import shuffle
+                #link.tr_pairs = shuffle(link.tr_pairs)
 
                 #first define the shared layers
                 if cl == 'cnn1' or cl == 'cnn2':
@@ -82,9 +82,13 @@ def linkability_siam(epochs, regu, batchsize, combi, inpath, params, exp, cl, da
 
                     clf = CNNsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, params, num_maxpools=params[3])
 
-                elif cl == 'lstm1' or cl == 'lstm2':
+                elif cl == 'lstm1':
 
-                    clf = LSTMsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, lstm_params=params)
+                    clf = LSTMsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, lstm_params=params, fixed_units=True)
+
+                elif cl == 'lstm2':
+
+                    clf = LSTMsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, lstm_params=params, fixed_units=False)
 
                 elif cl == 'dense':
 

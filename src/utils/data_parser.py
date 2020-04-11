@@ -5,6 +5,7 @@ from utils.storage import *
 
 
 
+
 def csv_to_step_vector(filename, path=DATA_PATH):
     '''
     From a given file extracts stepcount vector, trims it to 40320 records and returns it

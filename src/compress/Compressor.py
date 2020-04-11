@@ -11,7 +11,7 @@ from utils.storage import load_frame, dump_frame, check_if_vecframe, DATA_PATH
 
 class Compressor(ABC):
     """
-    Abstract class for all the dimention compressors like: aggregators, LSTM, PCA, SVD, TSNE.
+    Abstract class for all the dimension compressors like: aggregators, LSTM, PCA, SVD, TSNE.
     """
 
     def __init__(self, vec_name, data_path=DATA_PATH, out_path=DATA_PATH):
