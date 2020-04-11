@@ -63,12 +63,13 @@ def linkability_siam(epochs, regu, batchsize, combi, in_dir, params, exp, cl, da
 
     for infile in os.listdir(datapath + in_dir):
 
-        arr=[]
+        if 'vt' in infile and 'nor' in infile: #only use variance thresholded and normalized files
 
-        for i in range(0, 5):
+            arr=[]
+
+            for i in range(0, 5):
 
             #try:
-            if 'vt' in infile and 'nor' in infile: #only use variance thresholded and normalized files
 
                 link = Link(i, infile, weekends=weekend, in_datapath=datapath + in_dir , out_datapath = datapath)
 
