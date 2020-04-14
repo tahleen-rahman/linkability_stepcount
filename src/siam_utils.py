@@ -98,7 +98,7 @@ def linkability_siam(epochs, regu, batchsize, combi, in_dir, params, exp, cl, da
                 #Next combine the layers
                 clf.combine(plot=False)
 
-                auc = clf.fit_predict(link, batchsize, epochs, verbose=0)
+                auc = clf.fit_predict(link, batchsize, epochs, verbose=2)
 
                 print(infile, i, auc)
 
@@ -112,11 +112,11 @@ def linkability_siam(epochs, regu, batchsize, combi, in_dir, params, exp, cl, da
 
                 #print("infile skipped", infile)
 
-        aucs = pd.DataFrame(data=arr)  # , names= epochs, regu,  batchsize, i, infile, auc
+            aucs = pd.DataFrame(data=arr)  # , names= epochs, regu,  batchsize, i, infile, auc
 
-        aucs.to_csv(datapath + "results/" + aucfname, mode='a', header=False, index=False)
+            aucs.to_csv(datapath + "results/" + aucfname, mode='a', header=False, index=False)
 
-        print("saved AUCs to " + datapath +" results/" + aucfname)
+            print("saved AUCs to " + datapath +" results/" + aucfname)
     #print(aucarr)
 
 

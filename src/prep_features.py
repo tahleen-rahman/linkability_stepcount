@@ -45,17 +45,22 @@ def normalize(inpath, norm_path):
         normalize_vecframe_by_col(infile, in_path=inpath, out_path=norm_path)
 
 
+
 def variance_thresholding(DATA_PATH, in_dir, th=0.0, outpath=None):
+
+    in_path = DATA_PATH + in_dir
+
+    if not os.path.exists(in_path + str(th) + "vt/"):
+        os.makedirs(in_path + str(th) + "vt/")
 
     sel = VarianceThreshold(th)
 
-    in_path = DATA_PATH + in_dir
 
     for infile in os.listdir(in_path):
 
         if 'nor' in infile: #for normalized files only
 
-            if not os.path.exists(in_path + infile[:-4] + "_vt" + str(th)):
+            if not os.path.exists(in_path + str(th) + "vt/" +  infile[:-4] + "_vt" + str(th)):
 
                 vf = load_frame(infile, in_path)
                 check_if_vecframe(vf)
@@ -66,7 +71,7 @@ def variance_thresholding(DATA_PATH, in_dir, th=0.0, outpath=None):
                 vt = vf[vf.columns[sel.get_support(indices=True)]]
 
                 if outpath == None:
-                    outpath = in_path
+                    outpath = in_path + str(th) + "vt/"
 
                 dump_frame(vt, infile[:-4] + "_vt" + str(th), outpath, False)
                 print (infile, vf.shape, vt.shape)

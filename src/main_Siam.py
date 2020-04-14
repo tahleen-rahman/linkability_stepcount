@@ -20,7 +20,7 @@ exp,  cl = int(sys.argv[1]),  sys.argv[2]
 expdict = { 0: (200, 0.001, 64,'l1', 'linkdata_0/', 0.025) , # run this on GPU only,
             1: (200, 0.001, 64,'l1', 'linkdata_1/', 0.01) ,
             2: (100, 0.001, 64,'l1', 'linkdata_2/', 0.0),
-            3: (300, 0.001, 64,'l1', 'linkdata_3/', 0.0)
+            3: (50, 0.001, 64,'l1', 'linkdata_3/', 0.0)
         }
 
 epochs, regu, batchsize, combi, in_dir, var_th = expdict[exp]
@@ -36,11 +36,11 @@ clfdict = { 'lstm1' : ([[0.5, 0.2]]),  # list of size = num of lstm layers [lstm
 params = clfdict[cl]
 
 
-datapath="../../stepcount/data/dzne/"
+datapath="../data/dzne/" #../stepcount/
 
 from prep_features import variance_thresholding
 variance_thresholding(datapath, in_dir, th=var_th)
 
 
-linkability_siam(epochs, regu, batchsize, combi, in_dir, params, exp, cl, datapath)
+linkability_siam(epochs, regu, batchsize, combi, in_dir + str(var_th) + "vt/" , params, exp, cl, datapath)
 
