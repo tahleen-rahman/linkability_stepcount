@@ -157,7 +157,7 @@ class Dense_siameseClassifier(siameseClassifier):
 
         half_num_features = int(math.floor(num_features * dense_params[0]) if num_features>=2 else 1)
         shared_dense1 = Dense(half_num_features, input_shape=(num_features,),
-                              activation='relu')  # compresses the input to half the size
+                              activation='relu') #, kernel_initializer=k_init, bias_initializer=b_init
 
 
         if self.regu != None:
@@ -168,7 +168,7 @@ class Dense_siameseClassifier(siameseClassifier):
 
         quater_num_features = int(math.floor(num_features * dense_params[1])if num_features>=4 else 1)
         shared_dense2 = Dense(quater_num_features, input_shape=(half_num_features,),
-                              activation='relu')  # second layer: again, compresses the input to half the size
+                              activation='relu') #, kernel_initializer=k_init, bias_initializer=b_init
 
         if self.regu != None:
             shared_dense2.kernel_regularizer = self.regu

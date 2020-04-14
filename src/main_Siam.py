@@ -1,6 +1,4 @@
-import os
-
-
+"""import os
 os.environ['PYTHONHASHSEED'] = str(1)
 from numpy.random import seed
 seed(1)
@@ -8,7 +6,7 @@ import random
 random.seed(2)
 from tensorflow import set_random_seed
 set_random_seed(3)
-
+"""
 
 from siam_utils import linkability_siam
 import sys
@@ -17,7 +15,7 @@ import sys
 
 exp,  cl = int(sys.argv[1]),  sys.argv[2]
 
-expdict = { 0: (200, 0.001, 64,'l1', 'linkdata_0/', 0.025) , # run this on GPU only,
+expdict = { 0: (300, 0.001, 64,'l1', 'linkdata_0/', 0.025) , # run this on GPU only,
             1: (200, 0.001, 64,'l1', 'linkdata_1/', 0.01) ,
             2: (100, 0.001, 64,'l1', 'linkdata_2/', 0.0),
             3: (50, 0.001, 64,'l1', 'linkdata_3/', 0.0)

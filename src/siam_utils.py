@@ -73,8 +73,8 @@ def linkability_siam(epochs, regu, batchsize, combi, in_dir, params, exp, cl, da
 
                 link = Link(i, infile, weekends=weekend, in_datapath=datapath + in_dir , out_datapath = datapath)
 
-                #from sklearn.utils import shuffle
-                #link.tr_pairs = shuffle(link.tr_pairs)
+                from sklearn.utils import shuffle
+                link.tr_pairs = shuffle(link.tr_pairs)
 
                 #first define the shared layers
                 if cl == 'cnn1' or cl == 'cnn2':
