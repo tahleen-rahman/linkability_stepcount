@@ -36,29 +36,32 @@ class Link(Attack):
 
         if weekends:
 
-            self.pairsfilepath = self.out_datapath + "pairs.csv"
+            self.pairsfilepath = out_datapath + "pairs.csv"
             self.tr_pairsfilepath = self.out_datapath + "tr_pairs.csv"
             self.te_pairsfilepath = self.out_datapath + "te_pairs.csv"
 
         else:
 
-            self.pairsfilepath = self.out_datapath + "noweekend_pairs.csv"
+            self.pairsfilepath = out_datapath + "noweekend_pairs.csv"
             self.tr_pairsfilepath = self.out_datapath + "noweekend_tr_pairs.csv"
             self.te_pairsfilepath = self.out_datapath + "noweekend_te_pairs.csv"
 
 
-        if not (os.path.exists(self.pairsfilepath) and os.path.exists(self.tr_pairsfilepath) and os.path.exists(self.te_pairsfilepath)):
-
+        if not (os.path.exists(self.pairsfilepath)):
             print ('making', self.pairsfilepath)
-            true_df, false_df = self.makePairs()
+            self.pairs = self.makePairs()
+
+        else:
+            self.pairs = pd.read_csv(self.pairsfilepath)
+
+        if not (os.path.exists(self.tr_pairsfilepath) and os.path.exists(self.te_pairsfilepath)):
 
             print ('making', self.tr_pairsfilepath , 'and', self.te_pairsfilepath)
-            self.train_test_folds(i, true_df, false_df)
+            self.train_test_folds(i, self.pairs)
 
 
         self.tr_pairs = pd.read_csv(self.tr_pairsfilepath)
         self.te_pairs = pd.read_csv(self.te_pairsfilepath)
-        self.pairs    =  pd.read_csv(self.pairsfilepath)
 
 
 
@@ -71,8 +74,9 @@ class Link(Attack):
         import itertools
         import numpy as np
 
-        users = self.vecframe.index.unique()
         df = self.vecframe
+        users = df.index.unique()
+
 
         true, false = [], []
 
@@ -84,8 +88,8 @@ class Link(Attack):
                 true_pairs_ = list(itertools.combinations(user_ind, 2))
                 true_pairs = [list(x) for x in true_pairs_]
 
-                false_ind = df[df.user != user].index
-                false_pairs_ = list(np.random.choice(false_ind, size=(len(true_pairs), 2), replace=False))
+                other_users = df[df.user != user].user.unique()
+                false_pairs_ = list(np.random.choice(other_users, size=(len(true_pairs), 2), replace=False))
                 false_pairs = [list(x) for x in false_pairs_]
 
                 true += true_pairs
@@ -99,7 +103,7 @@ class Link(Attack):
                 true_pairs_ = list(itertools.combinations(user_ind, 2))
                 true_pairs = [list(x) for x in true_pairs_]
 
-                false_ind = df[df.user != user][df.desc >1].index
+                false_ind = df[df.user != user][df.desc >1].user.unique()
                 false_pairs_ = list(np.random.choice(false_ind, size=(len(true_pairs), 2), replace=False))
                 false_pairs = [list(x) for x in false_pairs_]
 
@@ -117,10 +121,10 @@ class Link(Attack):
         pairs.to_csv(self.pairsfilepath, index=False)
         print (len(pairs), "pairs made")
 
-        return true_df, false_df
+        return pairs
 
 
-    def train_test_folds(self, fold, true_df, false_df):
+    def train_test_folds(self, fold, pairs):
         """
         split pairs for cross val into train and test sets
         :param fold:
@@ -129,10 +133,13 @@ class Link(Attack):
         :return:
         """
 
-        te_tru = true_df[fold* int(0.2 * len(true_df)) : (fold+ 1) * int(0.2 * len(true_df))]
+        true_df = pairs[pairs.label==1]
+        false_df = pairs[pairs.label==0]
+
+        te_tru = true_df[fold * int(0.2 * len(true_df)) : (fold+ 1) * int(0.2 * len(true_df))]
         tr_tru = true_df.drop(te_tru.index)
 
-        te_fal = false_df[fold* int(0.2 * len(false_df)) : (fold+ 1) * int(0.2 * len(false_df))]
+        te_fal = false_df[fold * int(0.2 * len(false_df)) : (fold+ 1) * int(0.2 * len(false_df))]
         tr_fal = false_df.drop(te_fal.index)
 
         tr_pairs = tr_tru.append(tr_fal)

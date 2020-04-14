@@ -1,4 +1,4 @@
-"""import os
+import os
 os.environ['PYTHONHASHSEED'] = str(1)
 from numpy.random import seed
 seed(1)
@@ -6,7 +6,7 @@ import random
 random.seed(2)
 from tensorflow import set_random_seed
 set_random_seed(3)
-"""
+
 
 from siam_utils import linkability_siam
 import sys
@@ -34,7 +34,7 @@ clfdict = { 'lstm1' : ([[0.5, 0.2]]),  # list of size = num of lstm layers [lstm
 params = clfdict[cl]
 
 
-datapath="../data/dzne/" #../stepcount/
+datapath="../../stepcount/data/dzne/" #../stepcount/
 
 from prep_features import variance_thresholding
 variance_thresholding(datapath, in_dir, th=var_th)
