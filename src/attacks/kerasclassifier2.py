@@ -1,20 +1,32 @@
 # Created by rahman at 11:06 2020-02-22 using PyCharm
+import tensorflow as tf
 
+#if tf.test.is_built_with_cuda or tf.__version__ == '2.1.0':
+from tensorflow import keras
+from tensorflow.keras import backend as K
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+from tensorflow.keras.layers import Dropout, Dense, Conv1D, MaxPooling1D, Flatten, Reshape, LSTM
+from tensorflow.keras import Sequential, utils, Input, Model
 
-import logging
-import math
-
-import keras
-from keras.layers import Dropout, Dense, Conv1D, MaxPooling1D, Flatten, Reshape, LSTM
-from keras import Sequential, utils, Input, Model
-from keras.utils.vis_utils import plot_model
 #if tf.__version__ != '2.1.0':
     #import keras.layers.CuDNNLSTM
+
+
+"""import keras
+from keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras.layers import Dropout, Dense, Conv1D, MaxPooling1D, Flatten, Reshape, LSTM
+from keras import Sequential, utils, Input, Model"""
+
+from keras.utils.vis_utils import plot_model
 
 k_init = keras.initializers.Constant(value=0.1)
 b_init = keras.initializers.Constant(value=0)
 r_init = keras.initializers.Constant(value=0.1)
 
+
+
+import logging
+import math
 
 class BinaryDNN:
 
@@ -120,7 +132,7 @@ class siameseClassifier:
         # example does not add regularization to prediction layer - so don't do it here as well
 
         self.model = Model(inputs=[self.sample_a, self.sample_b], outputs=predictions)
-        self.model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+        self.model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy', tf.keras.metrics.AUC()])
 
         if plot:
             plot_model(self.model, to_file='siam.png', show_shapes=True, show_layer_names=True)
@@ -147,6 +159,35 @@ class siameseClassifier:
         return auc
 
 
+
+
+
+
+    def fit_predict_callback(self, link, batchsize, epochs, verbose=0):
+
+        es = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=10, restore_best_weights=True)
+        #mc = ModelCheckpoint('best_model.h5', monitor='val_acc', mode='max', verbose=1, save_best_only=True)
+
+
+        self.model.fit([link.vecframe.loc[link.tr_pairs.i].iloc[:, 2:], link.vecframe.loc[link.tr_pairs.j].iloc[:, 2:]],
+                       link.tr_pairs.label,
+                       batch_size=batchsize, epochs=epochs,
+                       validation_data=(
+                       [link.vecframe.loc[link.te_pairs.i].iloc[:, 2:], link.vecframe.loc[link.te_pairs.j].iloc[:, 2:]],
+                       link.te_pairs.label), verbose=verbose,
+                       callbacks=[es]) #, mc
+
+
+        #saved_model = load_model('best_model.h5')
+        y_pred = self.model.predict(
+            [link.vecframe.loc[link.te_pairs.i].iloc[:, 2:], link.vecframe.loc[link.te_pairs.j].iloc[:, 2:]],
+            verbose=verbose)
+
+        from sklearn.metrics import roc_auc_score
+
+        auc = roc_auc_score(link.te_pairs.label, y_pred)
+
+        return auc
 
 
 class Dense_siameseClassifier(siameseClassifier):

@@ -40,20 +40,21 @@ def add_padding(vf, padding):
     return df
 
 
-def linkability_siam(epochs, regu, batchsize, combi, in_dir, params, exp, cl, datapath = "../data/dzne/"):
+def linkability_siam(config, in_dir, params, exp, cl, datapath = "../data/dzne/", callback=True):
     """
 
-    :param epochs:
-    :param regu:
-    :param batchsize:
-    :param combi:
+    :param config: epochs, regu, batchsize, combi
     :param in_dir:
-    :param params:
-    :param exp:
-    :param cl:
-    :param datapath :
+    :param params: model layer params
+    :param exp: reqd for results filename
+    :param cl: reqd for results filename
+    :param datapath:
+    :param callback: use modelcheckpoint and early stopping
     :return:
     """
+
+    # unpack config
+    epochs, regu, batchsize, combi = config
 
     weekend = True
 
@@ -100,7 +101,13 @@ def linkability_siam(epochs, regu, batchsize, combi, in_dir, params, exp, cl, da
                 #Next combine the layers
                 clf.combine(plot=False)
 
-                auc = clf.fit_predict(link, batchsize, epochs, verbose=2)
+                if callback:
+
+                    auc = clf.fit_predict_callback(link, batchsize, epochs, verbose=2)
+
+                else:
+
+                    auc = clf.fit_predict(link, batchsize, epochs, verbose=2)
 
                 print(infile, i, auc)
 
