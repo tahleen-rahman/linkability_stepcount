@@ -8,8 +8,8 @@ import sys
 
 import pandas as pd
 
-from attacks.kerasclassifier2 import *
-from attacks.Linkability_crossval import Link
+from attacks.kerasclassifier import *
+from attacks.Linkability_crossval_2 import Link
 
 
 def add_padding(vf, padding):
@@ -56,9 +56,9 @@ def linkability_siam(config, in_dir, params, exp, cl, datapath = "../data/dzne/"
     # unpack config
     epochs, regu, batchsize, combi = config
 
-    weekend = True
+    weekend = False
 
-    aucfname = "clf_" + str(cl) + "_exp_" + str(exp) + "_cv_siam.csv"
+    aucfname = str(weekend) + "clf_" + str(cl) + "_exp_" + str(exp) + "_cv_siam.csv"
 
      #aucarr = []
 
@@ -73,7 +73,6 @@ def linkability_siam(config, in_dir, params, exp, cl, datapath = "../data/dzne/"
             for i in range(0, 5):
 
             #try:
-
                 link = Link(i, infile, weekends=weekend, in_datapath=datapath + in_dir , out_datapath = datapath+'newfolds/')
 
                 from sklearn.utils import shuffle

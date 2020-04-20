@@ -4,8 +4,8 @@ from numpy.random import seed
 seed(1)
 import random
 random.seed(2)
-#from tensorflow import set_random_seed
-#set_random_seed(3)
+import tensorflow as tf
+tf.random.set_seed(3)
 
 
 from siam_utils import linkability_siam
@@ -15,10 +15,11 @@ import sys
 
 exp,  cl , server = int(sys.argv[1]),  sys.argv[2], int(sys.argv[3])
 
-expdict = { 0: (100, 'linkdata_0/', 0.025) , # run this on GPU only,
-            1: (75,  'linkdata_1/', 0.01) ,
-            2: (50,  'linkdata_2/', 0.0),
-            3: (50,  'linkdata_3/', 0.0)
+expdict = { 0: (200, 'linkdata_0/', 0.025) , # run this on GPU only,
+            1: (200, 'linkdata_1/', 0.001) ,
+            2: (200, 'linkdata_2/', 0.0),
+            3: (50,  'linkdata_3/', 0.0),
+            4: (200, 'linkdata_dist/', 0.0)
           }
 max_epochs, in_dir, var_th = expdict[exp]
 

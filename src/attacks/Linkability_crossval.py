@@ -67,15 +67,18 @@ class Link(Attack):
 
     def makePairs(self):
         """
-        make umsymmetric pairs and saves indices
+        make umsymmetric pairs and saves indices of pairs
         :return:
         """
 
+        import random
         import itertools
         import numpy as np
+        def is_same_user(i, j):
+            return int(df.loc[i].user == df.loc[j].user)
 
         df = self.vecframe
-        users = df.index.unique()
+        users = df.user.unique()
 
 
         true, false = [], []
@@ -84,13 +87,31 @@ class Link(Attack):
 
             for user in users:
 
-                user_ind = df[df.user == user].index
+                user_ind = df[df.user == user].index.values
                 true_pairs_ = list(itertools.combinations(user_ind, 2))
                 true_pairs = [list(x) for x in true_pairs_]
 
-                other_users = df[df.user != user].user.unique()
-                false_pairs_ = list(np.random.choice(other_users, size=(len(true_pairs), 2), replace=False))
-                false_pairs = [list(x) for x in false_pairs_]
+                other_ind = df[df.user != user][df.desc<2].index.values.tolist()
+
+                others = random.sample(other_ind, len(true_pairs))
+                false_pairs = [[random.choice(user_ind), other] for other in others]
+
+                """
+                #oversample  twice as many other pairs as true pairs
+                other_pairs_ = list(np.random.choice(other_ind, size=(len(true_pairs)*2, 2), replace=False))
+                other_pairs = [list(x) for x in other_pairs_]
+
+                # remove index pairs might actually belong to the same user
+                count = 0
+                for i, j in other_pairs:
+
+                    if df.loc[i].user == df.loc[j].user:
+                        print("same user ind", i, j)
+                        other_pairs.remove([i, j])
+                        count+=1
+
+                false_pairs = other_pairs[:len(true_pairs)]
+                """
 
                 true += true_pairs
                 false += false_pairs
@@ -99,13 +120,32 @@ class Link(Attack):
 
             for user in users:
 
-                user_ind = df[df.user == user][df.desc >1].index
+                user_ind = df[df.user == user][df.desc >1].index.values.tolist()
                 true_pairs_ = list(itertools.combinations(user_ind, 2))
                 true_pairs = [list(x) for x in true_pairs_]
 
-                false_ind = df[df.user != user][df.desc >1].user.unique()
-                false_pairs_ = list(np.random.choice(false_ind, size=(len(true_pairs), 2), replace=False))
-                false_pairs = [list(x) for x in false_pairs_]
+                """other_ind = df[df.user != user][df.desc >1].index.values.tolist()
+                
+                #oversample  twice as many other pairs as true pairs
+                other_pairs_ = list(np.random.choice(other_ind, size=(len(true_pairs)*2, 2), replace=False))
+                other_pairs = [list(x) for x in other_pairs_]
+
+                # remove index pairs might actually belong to the same user
+                count = 0
+                for i, j in other_pairs:
+
+                    if df.loc[i].user == df.loc[j].user:
+                        print("same user ind", i, j)
+                        other_pairs.remove([i, j])
+                        count+=1
+
+                false_pairs = other_pairs[:len(true_pairs)]
+                """
+
+                other_ind = df[df.user != user][df.desc<2].index.values.tolist()
+                others = random.sample(other_ind, len(true_pairs))
+                false_pairs = [[user, other] for other in others]#
+
 
                 true += true_pairs
                 false += false_pairs
@@ -115,7 +155,9 @@ class Link(Attack):
         true_df['label'] = 1
 
         false_df = pd.DataFrame(data=false, columns=['i', 'j'])
-        false_df['label'] = 0
+        #false_df['label'] = 0
+        false_df['label'] = [is_same_user(row[0], row[1]) for row in false_df[['i', 'j']].values]
+
 
         pairs = true_df.append(false_df)
         pairs.to_csv(self.pairsfilepath, index=False)

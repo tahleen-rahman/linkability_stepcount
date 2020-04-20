@@ -1,5 +1,7 @@
 # Created by rahman at 11:06 2020-02-22 using PyCharm
 import tensorflow as tf
+tf.random.set_seed(3)
+
 
 #if tf.test.is_built_with_cuda or tf.__version__ == '2.1.0':
 from tensorflow import keras
@@ -165,7 +167,7 @@ class siameseClassifier:
 
     def fit_predict_callback(self, link, batchsize, epochs, verbose=0):
 
-        es = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=10, restore_best_weights=True)
+        es = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=30, restore_best_weights=True)
         #mc = ModelCheckpoint('best_model.h5', monitor='val_acc', mode='max', verbose=1, save_best_only=True)
 
 
