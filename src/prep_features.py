@@ -37,6 +37,35 @@ def make_stats(stats_datapath, combine_stats):
                 ds.compress_save()
 
 
+def filter_mornings(in_path, f):
+
+    out_path = in_path + "filt" + str(f) + "/"
+
+    if not os.path.exists(out_path):
+        os.makedirs(out_path)
+
+    for infile in os.listdir(in_path):
+
+        if 'nor.ftr' in infile: #for normalized files only
+
+            if not os.path.exists(in_path + "filt" + str(f) + "/" + infile[:-4] + "filt" + str(f) + ".ftr"):
+
+                df = load_frame(infile, in_path)
+
+                df_filt = df.iloc[:, 2:]
+                df_filt = df_filt.iloc[:, int(len(df_filt.columns) * f):]
+
+                df_filt['user'] = df.user
+                df_filt['desc'] = df.desc
+
+                cols = list(df_filt.columns)
+                df_filt = df_filt[cols[-2:] + cols[:-2]]
+
+                dump_frame(df_filt, infile[:-4] + '_filt' + str(f), out_path, in_csv=False)
+
+    return out_path
+
+
 
 def normalize(inpath, norm_path):
 
@@ -46,12 +75,12 @@ def normalize(inpath, norm_path):
 
 
 
-def variance_thresholding(DATA_PATH, in_dir, th=0.0, outpath=None):
+def variance_thresholding(in_path, th=0.0):
 
-    in_path = DATA_PATH + in_dir
+    out_path = in_path + str(th) + "vt/"
 
-    if not os.path.exists(in_path + str(th) + "vt/"):
-        os.makedirs(in_path + str(th) + "vt/")
+    if not os.path.exists(out_path):
+        os.makedirs(out_path)
 
     sel = VarianceThreshold(th)
 
@@ -60,7 +89,7 @@ def variance_thresholding(DATA_PATH, in_dir, th=0.0, outpath=None):
 
         if 'nor' in infile: #for normalized files only
 
-            if not os.path.exists(in_path + str(th) + "vt/" +  infile[:-4] + "_vt" + str(th)):
+            if not os.path.exists(out_path  +  infile[:-4] + "_vt" + str(th) +".ftr"):
 
                 vf = load_frame(infile, in_path)
                 check_if_vecframe(vf)
@@ -70,34 +99,33 @@ def variance_thresholding(DATA_PATH, in_dir, th=0.0, outpath=None):
 
                 vt = vf[vf.columns[sel.get_support(indices=True)]]
 
-                if outpath == None:
-                    outpath = in_path + str(th) + "vt/"
-
-                dump_frame(vt, infile[:-4] + "_vt" + str(th), outpath, False)
+                dump_frame(vt, infile[:-4] + "_vt" + str(th), out_path, False)
                 print (infile, vf.shape, vt.shape)
 
-
-
+    return out_path
 
 
 def prep_all(DATA_PATH):
+    """
+    :param DATA_PATH: path where unprocessed data is located
+    :return: the path where the features ready for attack are located
+    """
 
-    stats_datapath = DATA_PATH +  "statistics/"
+    stats_path = DATA_PATH + "statistics/"
 
-    make_stats(stats_datapath, combine_stats=False)
+    make_stats(stats_path, combine_stats=False)
 
-    norm_dir =  "normalized/"
+    path = DATA_PATH + "normalized/"
 
-    normalize(stats_datapath, DATA_PATH + norm_dir)
+    normalize(stats_path,  path)
 
-    #outpath = DATA_PATH + "var_th_norm/"
+    #path = filter_mornings(path, f=0.25)
 
-    #variance_thresholding(norm_path, outpath, th=0.01)
-    variance_thresholding(norm_dir,  th=0.01)
+    path = variance_thresholding(path, th=0.001)
 
-    #return outpath
+    return path
 
 
 if __name__ == '__main__':
 
-    prep_all(DATA_PATH='../data/dzne/')
+    print (prep_all(DATA_PATH='../data/dzne/'))

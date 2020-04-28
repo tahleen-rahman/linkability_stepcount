@@ -13,30 +13,31 @@ import sys
 
 
 
-exp,  cl , server = int(sys.argv[1]),  sys.argv[2], int(sys.argv[3])
+exp,  cl , server, weekend = int(sys.argv[1]),  sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
 
-expdict = { 0: (200, 'linkdata_0/', 0.025) , # run this on GPU only,
+regu, batchsize, combi = 0.001, 64, 'l1'
+
+expdict = { 0: (200, 'linkdata_0/', 0.001) , # run this on GPU only,
             1: (200, 'linkdata_1/', 0.001) ,
             2: (200, 'linkdata_2/', 0.0),
             3: (50,  'linkdata_3/', 0.0),
             4: (200, 'linkdata_dist/', 0.0)
           }
+
 max_epochs, in_dir, var_th = expdict[exp]
 
-clfdict = { 'lstm1' : ([[0.5, 0.2]]),  # list of size = num of lstm layers [lstm units as frac of inputsize, dropout]
+clfdict = { 'lstm1' : ([[0.5, 0.2], [0.25, 0.2]]),  # list of size = num of lstm layers [lstm units as frac of inputsize, dropout]
             'lstm2' : ([[16, 0.2]]),
             'lstm3' : ([[8, 0.2]]),
             'cnn1'   : ((16, 6), (16, 6), 8, 1), # layer i (filt size, kernel size) , max poolsize
             'dense'  : [0.5, 0.25], #[frac of inputsize]
             'cnn2'   : ((16, 6), (16, 6), 8, 2)
            }
+
 params = clfdict[cl]
 
-regu, batchsize, combi = 0.001, 64, 'l1'
 
-config=[max_epochs, regu, batchsize, combi]
-
-
+config = [max_epochs, regu, batchsize, combi]
 
 
 if server:
@@ -44,9 +45,14 @@ if server:
 else:
     datapath="../data/dzne/"
 
-from prep_features import variance_thresholding
-variance_thresholding(datapath, in_dir, th=var_th)
+path = datapath + in_dir
+
+from prep_features import *
+
+#path = filter_mornings(path, f=0.25)
+
+in_path = variance_thresholding(path, th=var_th)
 
 
-linkability_siam(config, in_dir + str(var_th) + "vt/" , params, exp, cl, datapath, callback=True)
+linkability_siam(config, in_path, params, exp, cl, weekend, datapath, callback=True)
 

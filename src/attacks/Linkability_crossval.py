@@ -91,7 +91,7 @@ class Link(Attack):
                 true_pairs_ = list(itertools.combinations(user_ind, 2))
                 true_pairs = [list(x) for x in true_pairs_]
 
-                other_ind = df[df.user != user][df.desc<2].index.values.tolist()
+                other_ind = df[df.user != user].index.values.tolist()
 
                 others = random.sample(other_ind, len(true_pairs))
                 false_pairs = [[random.choice(user_ind), other] for other in others]
@@ -124,8 +124,13 @@ class Link(Attack):
                 true_pairs_ = list(itertools.combinations(user_ind, 2))
                 true_pairs = [list(x) for x in true_pairs_]
 
-                """other_ind = df[df.user != user][df.desc >1].index.values.tolist()
-                
+
+                other_ind = df[df.user != user][df.desc>1].index.values.tolist()
+
+                others = random.sample(other_ind, len(true_pairs))
+                false_pairs = [[random.choice(user_ind), other] for other in others]
+
+                """
                 #oversample  twice as many other pairs as true pairs
                 other_pairs_ = list(np.random.choice(other_ind, size=(len(true_pairs)*2, 2), replace=False))
                 other_pairs = [list(x) for x in other_pairs_]
@@ -142,9 +147,6 @@ class Link(Attack):
                 false_pairs = other_pairs[:len(true_pairs)]
                 """
 
-                other_ind = df[df.user != user][df.desc<2].index.values.tolist()
-                others = random.sample(other_ind, len(true_pairs))
-                false_pairs = [[user, other] for other in others]#
 
 
                 true += true_pairs

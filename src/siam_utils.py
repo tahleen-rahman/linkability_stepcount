@@ -9,7 +9,7 @@ import sys
 import pandas as pd
 
 from attacks.kerasclassifier import *
-from attacks.Linkability_crossval_2 import Link
+from attacks.Linkability_crossval import Link
 
 
 def add_padding(vf, padding):
@@ -40,11 +40,11 @@ def add_padding(vf, padding):
     return df
 
 
-def linkability_siam(config, in_dir, params, exp, cl, datapath = "../data/dzne/", callback=True):
+def linkability_siam(config, in_datapath, params, exp, cl, weekend, datapath = "../data/dzne/", callback=True):
     """
 
     :param config: epochs, regu, batchsize, combi
-    :param in_dir:
+    :param in_datapath:
     :param params: model layer params
     :param exp: reqd for results filename
     :param cl: reqd for results filename
@@ -56,13 +56,14 @@ def linkability_siam(config, in_dir, params, exp, cl, datapath = "../data/dzne/"
     # unpack config
     epochs, regu, batchsize, combi = config
 
-    weekend = False
+    if not weekend:
+        aucfname = "noweekend_" + "clf_" + str(cl) + "_exp_" + str(exp) + "_cv_siam.csv"
+    else:
+        aucfname = "weekend_" + "clf_" + str(cl) + "_exp_" + str(exp) + "_cv_siam.csv"
 
-    aucfname = str(weekend) + "clf_" + str(cl) + "_exp_" + str(exp) + "_cv_siam.csv"
+    #aucarr = []
 
-     #aucarr = []
-
-    for infile in os.listdir(datapath + in_dir):
+    for infile in os.listdir(in_datapath):
 
         if 'vt' in infile and 'nor' in infile: #only use variance thresholded and normalized files
 
@@ -70,10 +71,10 @@ def linkability_siam(config, in_dir, params, exp, cl, datapath = "../data/dzne/"
 
             arr=[]
 
-            for i in range(0, 5):
+            for i in range(0, 1):
 
             #try:
-                link = Link(i, infile, weekends=weekend, in_datapath=datapath + in_dir , out_datapath = datapath+'newfolds/')
+                link = Link(i, infile, weekend, in_datapath , out_datapath = datapath + 'cv_folds/')
 
                 from sklearn.utils import shuffle
                 link.tr_pairs = shuffle(link.tr_pairs)
@@ -125,6 +126,7 @@ def linkability_siam(config, in_dir, params, exp, cl, datapath = "../data/dzne/"
             aucs.to_csv(datapath + "results/" + aucfname, mode='a', header=False, index=False)
 
             print("saved AUCs to " + datapath +" results/" + aucfname)
+
     #print(aucarr)
 
 
