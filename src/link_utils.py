@@ -167,6 +167,7 @@ def linkability_bl(in_path, datapath, cl, clf, exp, weekend):
                         link.prep_data(combi)
 
                     auc = link.attack(clf)
+                    print (auc)
 
                     arr.append([i, infile, auc])
                 #print("infile skipped", infile)
