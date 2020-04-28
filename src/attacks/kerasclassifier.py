@@ -5,6 +5,10 @@ tf.random.set_seed(3)
 
 #if tf.test.is_built_with_cuda or tf.__version__ == '2.1.0':
 from tensorflow import keras
+k_init = keras.initializers.Constant(value=0.1)
+b_init = keras.initializers.Constant(value=0)
+r_init = keras.initializers.Constant(value=0.1)
+
 from tensorflow.keras import backend as K
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from tensorflow.keras.layers import Dropout, Dense, Conv1D, MaxPooling1D, Flatten, Reshape, LSTM
@@ -13,7 +17,6 @@ from tensorflow.keras import Sequential, utils, Input, Model
 #if tf.__version__ != '2.1.0':
     #import keras.layers.CuDNNLSTM
 
-
 """import keras
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers import Dropout, Dense, Conv1D, MaxPooling1D, Flatten, Reshape, LSTM
@@ -21,9 +24,6 @@ from keras import Sequential, utils, Input, Model"""
 
 from keras.utils.vis_utils import plot_model
 
-k_init = keras.initializers.Constant(value=0.1)
-b_init = keras.initializers.Constant(value=0)
-r_init = keras.initializers.Constant(value=0.1)
 
 
 
@@ -74,8 +74,8 @@ class BinaryDNN:
 
 
         #y_keras= utils.to_categorical(y_train, 2)
-
-        self.model.fit(X_train, y_train, epochs = self.num_epochs, batch_size = self.batch_size, verbose=self.verbose)
+        es = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=30, restore_best_weights=True)
+        self.model.fit(X_train, y_train, epochs = self.num_epochs, batch_size = self.batch_size, verbose=self.verbose, callbacks=[es])
 
 
     def predict(self, X_test):
@@ -90,10 +90,11 @@ class BinaryDNN:
 
 
 
-class siameseClassifier:
+class SiameseClassifier:
 
     def __init__(self, num_features, regu, combi):
 
+        #self.l_a and self.l_b will be defined in the child constructors
 
         self.sample_a = Input(shape=(num_features,))
         self.sample_b = Input(shape=(num_features,))
@@ -101,7 +102,6 @@ class siameseClassifier:
         self.regu =  keras.regularizers.l2(regu)
         self.combi = combi
 
-        #self.l_a and self.l_b will be defined in the child constructors
 
 
 
@@ -192,7 +192,8 @@ class siameseClassifier:
         return auc
 
 
-class Dense_siameseClassifier(siameseClassifier):
+
+class Dense_siameseClassifier(SiameseClassifier):
 
     def __init__(self, num_features, regu, combi, dense_params):
 
@@ -225,7 +226,7 @@ class Dense_siameseClassifier(siameseClassifier):
 
 
 
-class LSTMsiameseClassifier(siameseClassifier):
+class LSTMsiameseClassifier(SiameseClassifier):
 
     def __init__(self, num_features, regu, combi, lstm_params, fixed_units=True):
         super().__init__(num_features, regu, combi)
@@ -273,7 +274,7 @@ def tensorabs(t):
     return abs(t)
 
 
-class CNNsiameseClassifier(siameseClassifier):
+class CNNsiameseClassifier(SiameseClassifier):
 
     def __init__(self, num_features, regu, combi, cnn_params, num_maxpools):
 
