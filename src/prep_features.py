@@ -61,6 +61,11 @@ def filter_mornings(in_path, f):
                 cols = list(df_filt.columns)
                 df_filt = df_filt[cols[-2:] + cols[:-2]]
 
+                try:
+                    check_if_vecframe(df_filt)
+                except:
+                    "skipping file", infile
+
                 dump_frame(df_filt, infile[:-4] + '_filt' + str(f), out_path, in_csv=False)
 
     return out_path
@@ -98,6 +103,11 @@ def variance_thresholding(in_path, th=0.0):
                 sel.fit(vf)
 
                 vt = vf[vf.columns[sel.get_support(indices=True)]]
+
+                try:
+                    check_if_vecframe(vf)
+                except:
+                    "skipping file", infile
 
                 dump_frame(vt, infile[:-4] + "_vt" + str(th), out_path, False)
                 print (infile, vf.shape, vt.shape)

@@ -7,6 +7,8 @@ random.seed(2)
 import tensorflow as tf
 tf.random.set_seed(3)
 
+max_epochs, regu, batchsize, combi = 300, 0.001, 64, 'l1'
+
 
 from siam_utils import linkability_siam
 import sys
@@ -14,8 +16,6 @@ import sys
 
 
 exp,  cl , server, weekend = int(sys.argv[1]),  sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
-
-max_epochs, regu, batchsize, combi = 300, 0.001, 64, 'l1'
 
 expdict = { 0: (30, 'linkdata_0/', 0.005) , # run this on GPU only,
             1: (30, 'linkdata_1/', 0.001) ,
@@ -56,3 +56,4 @@ in_path = variance_thresholding(path, th=var_th)
 
 linkability_siam(config, in_path, params, exp, cl, weekend, datapath,  callback=True)
 
+#TODO remove high entropy users

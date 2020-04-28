@@ -72,9 +72,10 @@ def linkability_siam(config, in_datapath, params, exp, cl, weekend, datapath,cal
 
             arr=[]
 
-            for i in range(0, 1):
+            for i in range(0, 5):
 
             #try:
+
                 link = Link(i, infile, weekend, in_datapath , out_datapath = datapath + 'cv_folds/')
 
                 from sklearn.utils import shuffle
