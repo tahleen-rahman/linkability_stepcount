@@ -10,7 +10,7 @@ import pandas as pd
 class Link(Attack):
 
 
-    def __init__(self, i, vf_fname, weekends, in_datapath = '../data/dzne/',  out_datapath = '../data/dzne/'):
+    def __init__(self, i, vf_fname, weekends, in_datapath,  out_datapath ):
         """
         creates or loads self.tr_pairs and  self.te_pairs
         :param i: cross validation fold
@@ -196,7 +196,7 @@ class Link(Attack):
 
     def prep_data(self, combi):
         """
-        for the random forest baseline attack
+        for the random forest baseline attack, prepare features and save in the filepaths tr_data_fp and te_data_fp
         :param combi:
         :return:
         """

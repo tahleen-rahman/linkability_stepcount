@@ -49,7 +49,6 @@ def linkability_siam(config, in_datapath, params, exp, cl, weekend, datapath,cal
     :param exp: reqd for results filename
     :param cl: reqd for results filename
     :param datapath:
-
     :param callback: use modelcheckpoint and early stopping
     :return:
     """
@@ -104,11 +103,8 @@ def linkability_siam(config, in_datapath, params, exp, cl, weekend, datapath,cal
                 clf.combine(plot=False)
 
                 if callback:
-
                     auc = clf.fit_predict_callback(link, batchsize, max_epochs, patience, verbose=2)
-
                 else:
-
                     auc = clf.fit_predict(link, batchsize, max_epochs,  verbose=2)
 
                 print(infile, i, auc)
@@ -127,8 +123,56 @@ def linkability_siam(config, in_datapath, params, exp, cl, weekend, datapath,cal
 
             aucs.to_csv(datapath + "results/" + aucfname, mode='a', header=False, index=False)
 
-            print("saved AUCs to " + datapath +" results/" + aucfname)
+            print("saved AUCs to " + datapath + "results/" + aucfname)
 
     #print(aucarr)
 
 
+def linkability_bl(in_path, datapath, cl, clf, exp, weekend):
+    """
+    baseline attacks
+    :param in_path:
+    :param cl:
+    :param clf:
+    :param weekend:
+    :return:
+    """
+
+    if not weekend:
+        aucfname = "noweekend_" + "clf_" + str(cl) + "_exp_" + str(exp) + "_cv_BL.csv"
+    else:
+        aucfname = "weekend_" + "clf_" + str(cl) + "_exp_" + str(exp) + "_cv_BL.csv"
+
+
+    for infile in os.listdir(in_path):  # all  intervals for single stats + distributions 1, 6, 12 hrs
+
+        if 'vt' in infile and 'nor' in infile: #only use variance thresholded and normalized files
+
+            print (infile)
+
+            arr=[]
+
+            for i in range(0, 5):
+
+                link = Link(i, infile, weekend, in_path , out_datapath = datapath + 'cv_folds/')
+
+
+                for combi in ['l1']:  # 'sql2', 'mul',
+
+                    link.tr_data_fp = link.out_datapath + infile[:-4] + combi + "_" + str(weekend) + 'weekend_tr_data.csv'
+
+                    link.te_data_fp = link.out_datapath + infile[:-4] + combi + "_" + str(weekend) + 'weekend_te_data.csv'
+
+                    if not (os.path.exists(link.tr_data_fp) and os.path.exists(link.te_data_fp)):
+                        link.prep_data(combi)
+
+                    auc = link.attack(clf)
+
+                    arr.append([i, infile, auc])
+                #print("infile skipped", infile)
+
+            aucs = pd.DataFrame(data=arr)  # , names = i, infile, auc
+
+            aucs.to_csv(datapath + "results/" + aucfname, mode='a', header=False, index=False)
+
+            print("saved AUCs to " + datapath + "results/" + aucfname)

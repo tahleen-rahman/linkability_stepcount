@@ -1,7 +1,7 @@
 from sklearn.metrics import roc_auc_score
 
 from attacks.Linkability import Link
-from attacks.kerasclassifier2 import InkensClassifier
+from attacks.kerasclassifier import InkensClassifier
 from utils.storage import saveKerasmodel, loadKerasmodel
 
 

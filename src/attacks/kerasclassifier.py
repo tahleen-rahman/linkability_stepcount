@@ -32,7 +32,7 @@ import math
 
 class BinaryDNN:
 
-    def __init__(self, num_layers = 2, layer_params=[[0.5, 0.2], [0.25, 0]], num_epochs=100, batch_size=24, verbose=1):
+    def __init__(self, num_layers = 2, layer_params=[[0.5, 0.2], [0.25, 0]], num_epochs=100, batch_size=64, verbose=0):
         """
 
         :param num_layers: just for a sanity check

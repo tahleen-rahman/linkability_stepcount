@@ -7,49 +7,48 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LinearRegression
 from attacks import BinaryDNN
 from sklearn import svm
+from link_utils import linkability_bl
 
 
-folder = sys.argv[1]
-
-
-
-
-names = ["RF", "LR",  "SVM", "LinearSVC", "1layerDense",
-         "2layerDense", "3layerDense"]
-classifiers =   [
-                RandomForestClassifier(n_estimators=100, random_state=0)
-                , LinearRegression()
-                , svm.SVC(gamma='scale', decision_function_shape='ovo')
-                , svm.LinearSVC(max_iter=2000) # May not converge if training data is not normalized
-                , BinaryDNN(num_layers = 1, layer_params=[[0.25, 0.2]], num_epochs=5, batch_size=24, verbose=0)
-                , BinaryDNN(num_layers = 2, layer_params=[[0.5, 0.2], [0.5, 0.2]], num_epochs=50, batch_size=64, verbose=0)
-                , BinaryDNN(num_layers = 3, layer_params=[[0.25, 0.2], [0.25, 0.2], [0.25, 0.2]], num_epochs=5, batch_size=24, verbose=0)
-                ]
-
-weekend=True
-
-for infile in os.listdir("../data/dzne/"+ folder ): # all  intervals for single stats + distributions 1, 6, 12 hrs
-
-    #infile= 'dzne_dsp'
-
-    #print ("infile", infile)
-
-    link = Link(infile, weekends=weekend, in_datapath='../data/dzne/' + folder + "/")
-
-    for combi in [ 'l1']: #'sql2', 'mul',
-
-        link.tr_data_fp = link.out_datapath + infile + str(weekend) + 'weeknd_tr_data.csv'
-
-        link.te_data_fp = link.out_datapath + infile + str(weekend) + 'weeknd_te_data.csv'
-
-        if not (os.path.exists(link.tr_data_fp) and os.path.exists(link.te_data_fp)):
-
-            link.prep_data(combi)
-
-
-        for name, clf in zip( names, classifiers):
-
-            print (infile, name, link.attack(clf))
+exp,  cl, server, weekend = int(sys.argv[1]),  sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
 
 
 
+
+expdict = { 0: (100, 'linkdata_0/', 0.005) , # run this on GPU only,
+            1: (100, 'linkdata_1/', 0.001) ,
+            2: (50,  'linkdata_2/', 0.0),
+            3: (10,  'linkdata_3/', 0.0),
+            4: (100, 'linkdata_dist/', 0.0)
+          }
+
+trees, in_dir, var_th = expdict[exp]
+
+clfdict =   {   'rf':       RandomForestClassifier(n_estimators=trees, random_state=0),
+                'lr':       LinearRegression(),
+                'svm':      svm.SVC(gamma='scale', decision_function_shape='ovo'),
+                'lsvc':     svm.LinearSVC(max_iter=2000), # May not converge if training data is not normalized
+                'dense1':   BinaryDNN(num_layers = 1, layer_params=[[0.25, 0.2]], num_epochs=100, batch_size=64, verbose=0),
+                'dense2':   BinaryDNN(num_layers = 2, layer_params=[[0.5, 0.2], [0.5, 0.2]], num_epochs=100, batch_size=64, verbose=0),
+                'dense3':   BinaryDNN(num_layers = 3, layer_params=[[0.25, 0.2], [0.25, 0.2], [0.25, 0.2]], num_epochs=100, batch_size=64, verbose=0)
+            }
+
+clf = clfdict[cl]
+
+
+
+
+if server:
+    datapath="../../stepcount/data/dzne/"
+else:
+    datapath="../data/dzne/"
+
+path = datapath + in_dir
+
+from prep_features import *
+
+#path = filter_mornings(path, f=0.25)
+in_path = variance_thresholding(path, th=var_th)
+
+
+linkability_bl(in_path, datapath, cl, clf, exp, weekend)
