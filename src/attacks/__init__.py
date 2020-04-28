@@ -7,8 +7,8 @@ from .AttributeInference_crossval import AttributeInferenceCV
 from .AttributeInference import AttributeInference
 from .CdnnClassifier import CdnnClassifier
 from .CNNKerasClassifier import CNNKerasClassifier
-from .kerasclassifier2 import CNNsiameseClassifier
-from .kerasclassifier2 import BinaryDNN
-from .kerasclassifier2 import Dense_siameseClassifier
-from .kerasclassifier2 import siameseClassifier
+from .kerasclassifier import CNNsiameseClassifier
+from .kerasclassifier import BinaryDNN
+from .kerasclassifier import Dense_siameseClassifier
+from .kerasclassifier import siameseClassifier
 from .lstmclassifier import LSTMclassifier
