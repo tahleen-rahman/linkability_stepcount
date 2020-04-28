@@ -15,16 +15,16 @@ import sys
 
 exp,  cl , server, weekend = int(sys.argv[1]),  sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
 
-regu, batchsize, combi = 0.001, 64, 'l1'
+max_epochs, regu, batchsize, combi = 300, 0.001, 64, 'l1'
 
-expdict = { 0: (200, 'linkdata_0/', 0.001) , # run this on GPU only,
-            1: (200, 'linkdata_1/', 0.001) ,
-            2: (200, 'linkdata_2/', 0.0),
-            3: (50,  'linkdata_3/', 0.0),
-            4: (200, 'linkdata_dist/', 0.0)
+expdict = { 0: (30, 'linkdata_0/', 0.005) , # run this on GPU only,
+            1: (30, 'linkdata_1/', 0.001) ,
+            2: (30, 'linkdata_2/', 0.0),
+            3: (5,  'linkdata_3/', 0.0),
+            4: (30, 'linkdata_dist/', 0.0)
           }
 
-max_epochs, in_dir, var_th = expdict[exp]
+patience, in_dir, var_th = expdict[exp]
 
 clfdict = { 'lstm1' : ([[0.5, 0.2], [0.25, 0.2]]),  # list of size = num of lstm layers [lstm units as frac of inputsize, dropout]
             'lstm2' : ([[16, 0.2]]),
@@ -37,7 +37,7 @@ clfdict = { 'lstm1' : ([[0.5, 0.2], [0.25, 0.2]]),  # list of size = num of lstm
 params = clfdict[cl]
 
 
-config = [max_epochs, regu, batchsize, combi]
+config = [max_epochs, patience, regu, batchsize, combi]
 
 
 if server:
@@ -54,5 +54,5 @@ from prep_features import *
 in_path = variance_thresholding(path, th=var_th)
 
 
-linkability_siam(config, in_path, params, exp, cl, weekend, datapath, callback=True)
+linkability_siam(config, in_path, params, exp, cl, weekend, datapath,  callback=True)
 

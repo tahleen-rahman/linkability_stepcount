@@ -40,7 +40,7 @@ def add_padding(vf, padding):
     return df
 
 
-def linkability_siam(config, in_datapath, params, exp, cl, weekend, datapath = "../data/dzne/", callback=True):
+def linkability_siam(config, in_datapath, params, exp, cl, weekend, datapath,callback=True):
     """
 
     :param config: epochs, regu, batchsize, combi
@@ -49,12 +49,13 @@ def linkability_siam(config, in_datapath, params, exp, cl, weekend, datapath = "
     :param exp: reqd for results filename
     :param cl: reqd for results filename
     :param datapath:
+
     :param callback: use modelcheckpoint and early stopping
     :return:
     """
 
     # unpack config
-    epochs, regu, batchsize, combi = config
+    max_epochs, patience, regu, batchsize, combi = config
 
     if not weekend:
         aucfname = "noweekend_" + "clf_" + str(cl) + "_exp_" + str(exp) + "_cv_siam.csv"
@@ -103,17 +104,17 @@ def linkability_siam(config, in_datapath, params, exp, cl, weekend, datapath = "
 
                 if callback:
 
-                    auc = clf.fit_predict_callback(link, batchsize, epochs, verbose=2)
+                    auc = clf.fit_predict_callback(link, batchsize, max_epochs, patience, verbose=2)
 
                 else:
 
-                    auc = clf.fit_predict(link, batchsize, epochs, verbose=2)
+                    auc = clf.fit_predict(link, batchsize, max_epochs,  verbose=2)
 
                 print(infile, i, auc)
 
                 #aucarr.append(auc)
 
-                arr.append([epochs, regu, batchsize, i, infile, auc])
+                arr.append([patience, regu, batchsize, i, infile, auc])
 
                 del clf
 
