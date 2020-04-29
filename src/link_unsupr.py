@@ -3,32 +3,39 @@
 import os
 import sys
 from attacks.Linkability import Link
+from link_utils import linkability_unsup
 
-datapath= sys.argv[1]
+metric, server, weekend = sys.argv[1], int(sys.argv[2]),  int(sys.argv[3])
 
 
 
+if server:
+    datapath = "../../stepcount/data/dzne/"
+else:
+    datapath = "../data/dzne/"
 
-weekends = True
 
-for combi in ['cosine', 'eucl']:
 
-    for infile in os.listdir(datapath):
+expdict = { 0: ('linkdata_0/', 0.005) , # run this on GPU only,
+            1: ('linkdata_1/', 0.001) ,
+            2: ('linkdata_2/', 0.0),
+            3: ('linkdata_3/', 0.0),
+            4: ('linkdata_dist/', 0.0)
+          }
 
-        try:
+for exp in range(0, 5):
 
-            link = Link(infile, weekends, in_datapath=datapath)
+    in_dir, var_th = expdict[exp]
 
-            link.unsup_data_fp = link.out_datapath + combi + str(weekends) + infile+ 'weeknd_unsup_data.csv'
+    path = datapath + in_dir
 
-            if not (os.path.exists(link.unsup_data_fp) ):
-                link.prep_data_unsup(combi)
+    from prep_features import *
 
-            print (infile, combi, link.unsup_attack())
+    #path = filter_mornings(path, f=0.25)
+    in_path = variance_thresholding(path, th=var_th)
 
-        except:
+    linkability_unsup(in_path, datapath, metric, exp, weekend)
 
-            print (infile, "skipped")
 
 
 

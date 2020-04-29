@@ -17,8 +17,8 @@ import sys
 
 exp,  cl , server, weekend = int(sys.argv[1]),  sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
 
-expdict = { 0: (30, 'linkdata_0/', 0.005) , # run this on GPU only,
-            1: (30, 'linkdata_1/', 0.001) ,
+expdict = { 0: (30, 'linkdata_0/', 0.005), # run this on GPU only,
+            1: (30, 'linkdata_1/', 0.001),
             2: (30, 'linkdata_2/', 0.0),
             3: (5,  'linkdata_3/', 0.0),
             4: (30, 'linkdata_dist/', 0.0)
@@ -27,10 +27,10 @@ expdict = { 0: (30, 'linkdata_0/', 0.005) , # run this on GPU only,
 patience, in_dir, var_th = expdict[exp]
 
 clfdict = { 'lstm1' : ([[0.5, 0.2], [0.25, 0.2]]),  # list of size = num of lstm layers [lstm units as frac of inputsize, dropout]
-            'lstm2' : ([[16, 0.2]]),
-            'lstm3' : ([[8, 0.2]]),
+            'lstm2' : ([[16, 0.2]]), #for medium files
+            'lstm3' : ([[8, 0.2]]),  #for the big files
             'cnn1'   : ((16, 6), (16, 6), 8, 1), # layer i (filt size, kernel size) , max poolsize
-            'dense'  : [0.5, 0.25], #[frac of inputsize]
+            'dense'  : [0.5, 0.25],  #[frac of inputsize]
             'cnn2'   : ((16, 6), (16, 6), 8, 2)
            }
 

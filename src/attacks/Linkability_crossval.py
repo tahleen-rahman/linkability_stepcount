@@ -296,8 +296,8 @@ class Link(Attack):
         X_test, y_test = test_.iloc[:, 3:].values, test_.label.values
 
         clf.fit(X_train, y_train)
-        pred_ = clf.predict(X_test)
-        auc = roc_auc_score(y_test, pred_)
+        pred_ = clf.predict_proba(X_test)
+        auc = roc_auc_score(y_test, pred_[:,1])
 
         return auc
 

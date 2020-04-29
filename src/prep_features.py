@@ -63,10 +63,9 @@ def filter_mornings(in_path, f):
 
                 try:
                     check_if_vecframe(df_filt)
+                    dump_frame(df_filt, infile[:-4] + '_filt' + str(f), out_path, in_csv=False)
                 except:
                     "skipping file", infile
-
-                dump_frame(df_filt, infile[:-4] + '_filt' + str(f), out_path, in_csv=False)
 
     return out_path
 

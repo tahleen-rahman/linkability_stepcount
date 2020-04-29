@@ -177,3 +177,50 @@ def linkability_bl(in_path, datapath, cl, clf, exp, weekend):
             aucs.to_csv(datapath + "results/" + aucfname, mode='a', header=False, index=False)
 
             print("saved AUCs to " + datapath + "results/" + aucfname)
+
+
+def linkability_unsup(in_path, datapath, metric, exp, weekend):
+    """
+
+    :param in_path:
+    :param datapath:
+    :param metric:
+    :param exp:
+    :param weekend:
+    :return:
+    """
+
+    if not weekend:
+        aucfname = "noweekend_" + "_exp_" + str(exp) + "_cv_BL.csv"
+    else:
+        aucfname = "weekend_" +"_exp_" + str(exp) + "_cv_BL.csv"
+
+
+    for infile in os.listdir(in_path):  # all  intervals for single stats + distributions 1, 6, 12 hrs
+
+        if 'vt' in infile and 'nor' in infile: #only use variance thresholded and normalized files
+
+            print (infile)
+
+            arr=[]
+
+            for i in range(0, 5):
+
+                link = Link(i, infile, weekend, in_path , out_datapath = datapath + 'cv_folds/', unsup=True)
+
+                link.unsup_data_fp = link.out_datapath + infile[:-4] + metric + str(weekend)  + 'weekend_unsup_data.csv'
+
+                if not (os.path.exists(link.unsup_data_fp)):
+                    link.prep_data_unsup(metric)
+
+                auc = link.unsup_attack()
+
+                print(auc)
+
+                arr.append([i, infile, auc])
+
+            aucs = pd.DataFrame(data=arr)  # , names = i, infile, auc
+
+            aucs.to_csv(datapath + "results/" + aucfname, mode='a', header=False, index=False)
+
+            print("saved AUCs to " + datapath + "results/" + aucfname)
