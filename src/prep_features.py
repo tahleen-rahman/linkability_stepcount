@@ -105,11 +105,11 @@ def variance_thresholding(in_path, th=0.0):
 
                 try:
                     check_if_vecframe(vf)
+                    dump_frame(vt, infile[:-4] + "_vt" + str(th), out_path, False)
+                    print(infile, vf.shape, vt.shape)
                 except:
                     "skipping file", infile
 
-                dump_frame(vt, infile[:-4] + "_vt" + str(th), out_path, False)
-                print (infile, vf.shape, vt.shape)
 
     return out_path
 
