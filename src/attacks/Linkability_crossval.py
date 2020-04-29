@@ -10,7 +10,7 @@ import pandas as pd
 class Link(Attack):
 
 
-    def __init__(self, i, vf_fname, weekends, in_datapath,  out_datapath ):
+    def __init__(self, i, vf_fname, weekends, in_datapath,  out_datapath, unsup=False):
         """
         creates or loads self.tr_pairs and  self.te_pairs
         :param i: cross validation fold
@@ -54,14 +54,16 @@ class Link(Attack):
         else:
             self.pairs = pd.read_csv(self.pairsfilepath)
 
-        if not (os.path.exists(self.tr_pairsfilepath) and os.path.exists(self.te_pairsfilepath)):
+        if not unsup:
 
-            print ('making', self.tr_pairsfilepath , 'and', self.te_pairsfilepath)
-            self.train_test_folds(i, self.pairs)
+            if not (os.path.exists(self.tr_pairsfilepath) and os.path.exists(self.te_pairsfilepath)):
+
+                print ('making', self.tr_pairsfilepath , 'and', self.te_pairsfilepath)
+                self.train_test_folds(i, self.pairs)
 
 
-        self.tr_pairs = pd.read_csv(self.tr_pairsfilepath)
-        self.te_pairs = pd.read_csv(self.te_pairsfilepath)
+            self.tr_pairs = pd.read_csv(self.tr_pairsfilepath)
+            self.te_pairs = pd.read_csv(self.te_pairsfilepath)
 
 
 
