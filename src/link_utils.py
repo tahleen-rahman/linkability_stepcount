@@ -191,9 +191,9 @@ def linkability_unsup(in_path, datapath, metric, exp, weekend):
     """
 
     if not weekend:
-        aucfname = "noweekend_" + "_exp_" + str(exp) + "_cv_BL.csv"
+        aucfname = "noweekend_" + metric + "_cv_BL.csv"
     else:
-        aucfname = "weekend_" +"_exp_" + str(exp) + "_cv_BL.csv"
+        aucfname = "weekend_" + metric + "_cv_BL.csv"
 
 
     for infile in os.listdir(in_path):  # all  intervals for single stats + distributions 1, 6, 12 hrs
