@@ -206,7 +206,15 @@ def linkability_unsup(in_path, datapath, metric, exp, weekend):
 
             for i in range(0, 5):
 
-                link = Link(i, infile, weekend, in_path , out_datapath = datapath + 'cv_folds/', unsup=True)
+                try:
+
+                    link = Link(i, infile, weekend, in_path , out_datapath = datapath + 'cv_folds/', unsup=True)
+
+                except Exception as e:
+
+                    print (e)
+                    print (infile, "skipped")
+                    continue
 
                 link.unsup_data_fp = link.out_datapath + infile[:-4] + metric + str(weekend)  + 'weekend_unsup_data.csv'
 
