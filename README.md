@@ -34,7 +34,7 @@ or
 5. python3 plots.py
 
 
-Explanation for Parameters exp, cl, server, weekend:
+Parameters exp, cl1, cl2 server, weekend:
 
 1. exp1 - Choose from the keys 0...4 , for the siamese attack, according to the dimensions of features (less epoch patience,  more variance threshold for files with lesser features).
 
