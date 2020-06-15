@@ -20,10 +20,11 @@ Working on project (in stepenv):
 * deactivate
 
 
-USAGE
-python3 main.py # runs everything serially from processing raw data until plotting results
+USAGE:
+
+* python3 main.py # runs everything serially from processing raw data until plotting results
 or
-To manually run different  steps from their separate files (to control parameters etc) follow the following steps:
+* To manually run different  steps from their separate files (to control parameters etc) follow the following steps:
 1. python3 prep_features.py
 2. python3 link_siam.py exp cl1 server weekend
 3. python3 link_baseline.py  exp  cl2 server weekend
@@ -47,14 +48,12 @@ Explanation for Parameters exp, cl, server, weekend:
 2. cl1 - Choose a classifier for the siamese attack from the dict keys below 
 
 * clfdict = { 'lstm1' : ([[0.5, 0.2], [0.25, 0.2]]),  # list of size = num of lstm layers [lstm units as frac of inputsize, dropout]
-            'lstm2' : ([[16, 0.2]]), #for medium files
-            'lstm3' : ([[8, 0.2]]),  #for the big files
+  *          'lstm2' : ([[16, 0.2]]), #for medium files
+  *          'lstm3' : ([[8, 0.2]]),  #for the big files
             'cnn1'   : ((16, 6), (16, 6), 8, 1), # layer i (filt size, kernel size) , max poolsize
             'dense'  : [0.5, 0.25],  #[frac of inputsize]
             'cnn2'   : ((16, 6), (16, 6), 8, 2)
            }
-
-          }
 
 
 3. cl2 - Choose a classifier for the supervised baseline attack from the dict keys below 
