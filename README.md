@@ -35,7 +35,8 @@ or
 * Explanation for Parameters exp, cl, server, weekend:
 
 1. exp1 - Choose from the keys 0...4 , for the siamese attack, according to the dimensions of features (less epoch patience,  more variance threshold for files with lesser features).
-*  values are in the format (patience parameter for early stopping, subdir containing features, variance threshold)
+
+Values are in the format (patience parameter for early stopping, subdir containing features, variance threshold)
               
             0: (30, 'linkdata_0/', 0.005),
             1: (20, 'linkdata_1/', 0.001),
