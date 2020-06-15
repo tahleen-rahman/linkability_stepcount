@@ -25,6 +25,7 @@ USAGE:
 * python3 main.py # runs everything serially from processing raw data until plotting results
 
 or
+
 * To manually run different  steps from their separate files (to control parameters etc) follow the following steps:
 1. python3 prep_features.py
 2. python3 link_siam.py exp cl1 server weekend
@@ -33,7 +34,7 @@ or
 5. python3 plots.py
 
 
-* Explanation for Parameters exp, cl, server, weekend:
+Explanation for Parameters exp, cl, server, weekend:
 
 1. exp1 - Choose from the keys 0...4 , for the siamese attack, according to the dimensions of features (less epoch patience,  more variance threshold for files with lesser features).
 
