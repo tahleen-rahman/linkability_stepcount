@@ -93,7 +93,7 @@ def variance_thresholding(in_path, th=0.0):
 
         if 'nor' in infile: #for normalized files only
 
-            if not os.path.exists(out_path  +  infile[:-4] + "_vt" + str(th) +".ftr"):
+            if not os.path.exists(out_path + infile[:-4] + "_vt" + str(th) + ".ftr"):
 
                 vf = load_frame(infile, in_path)
                 check_if_vecframe(vf)
@@ -119,6 +119,12 @@ def prep_all(DATA_PATH):
     :param DATA_PATH: path where unprocessed data is located
     :return: the path where the features ready for attack are located
     """
+
+    from utils.data_parser import parse_all_csv_to_stepframe
+    parse_all_csv_to_stepframe()
+
+    from utils.aggregator import daySplitter
+    daySplitter('dzne')
 
     stats_path = DATA_PATH + "statistics/"
 

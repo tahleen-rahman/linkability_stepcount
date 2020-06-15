@@ -204,11 +204,22 @@ def linkability_unsup(in_path, datapath, metric, exp, weekend):
 
             arr=[]
 
-            for i in range(0, 5):
+            for i in range(0, 1): # no cross val for unsupervised,
 
                 try:
 
                     link = Link(i, infile, weekend, in_path , out_datapath = datapath + 'cv_folds/', unsup=True)
+
+                    link.unsup_data_fp = link.out_datapath + infile[:-4] + metric + str(weekend)  + 'weekend_unsup_data.csv'
+
+                    if not (os.path.exists(link.unsup_data_fp)):
+                        link.prep_data_unsup(metric)
+
+                    auc = link.unsup_attack()
+
+                    print(auc)
+
+                    arr.append([infile, auc])
 
                 except Exception as e:
 
@@ -216,19 +227,38 @@ def linkability_unsup(in_path, datapath, metric, exp, weekend):
                     print (infile, "skipped")
                     continue
 
-                link.unsup_data_fp = link.out_datapath + infile[:-4] + metric + str(weekend)  + 'weekend_unsup_data.csv'
-
-                if not (os.path.exists(link.unsup_data_fp)):
-                    link.prep_data_unsup(metric)
-
-                auc = link.unsup_attack()
-
-                print(auc)
-
-                arr.append([i, infile, auc])
-
-            aucs = pd.DataFrame(data=arr)  # , names = i, infile, auc
+            aucs = pd.DataFrame(data=arr)  # , names = infile, auc
 
             aucs.to_csv(datapath + "results/" + aucfname, mode='a', header=False, index=False)
 
             print("saved AUCs to " + datapath + "results/" + aucfname)
+
+def convert(val):
+    return 1-val if val<0.5 else val
+
+
+def merge_results():
+
+    rf = pd.read_csv('../data/dzne/results/link_rf.csv')#, names = ['fold', 'infile', 'auc'])
+    dense = pd.read_csv('../data/dzne/results/siam_dense.csv')#, names = ['epochs', 'regu',  'batchsize', 'fold', 'infile', 'auc'])
+    cos = pd.read_csv('../data/dzne/results/link_cos.csv')#,names = ['infile', 'cos_auc'])
+    eucl = pd.read_csv('../data/dzne/results/link_eucl.csv')#, names = ['infile', 'eucl_auc'])
+
+    ## ensure all aucs are >0.5
+    cos['cos_auc'] = cos.cos_auc.apply(convert)
+    dense['auc'] = dense.auc.apply(convert)
+    rf['auc'] = rf.auc.apply(convert)
+    eucl['eucl_auc'] = eucl.eucl_auc.apply(convert)
+
+    rf_res = rf.groupby('infile').auc.agg([pd.np.mean, pd.np.std]).rename(columns={'mean': 'rf_mean', 'std': 'rf_std'})
+    dense_res = dense.groupby('infile').auc.agg([pd.np.mean, pd.np.std]).rename(columns={'mean': 'dense_mean', 'std': 'dense_std'})
+
+
+    dense_rf = dense_res.merge(rf_res, on='infile', how='outer')
+    dense_rf_cos = dense_rf.merge(cos, on='infile', how='outer')
+    dense_rf_cos_eucl = dense_rf_cos.merge(eucl, on='infile', how='outer')
+
+    merged_fp = '../data/plotdata/link_merged.csv'
+    dense_rf_cos_eucl.to_csv(merged_fp)
+
+    return merged_fp

@@ -5,7 +5,7 @@ import sys
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LinearRegression
-from attacks import BinaryDNN
+from attacks import BinaryDNN, LSTMclassifier
 from sklearn import svm
 
 from attacks import AttributeInferenceCV
@@ -24,6 +24,7 @@ classifiers =   [
                 , BinaryDNN(num_layers = 1, layer_params=[[0.25, 0.2]], num_epochs=5, batch_size=24, verbose=0)
                 , BinaryDNN(num_layers = 2, layer_params=[[0.5, 0.2], [0.25, 0]], num_epochs=150, batch_size=64, verbose=0)
                 , BinaryDNN(num_layers = 3, layer_params=[[2, 0.2], [0.5, 0.2], [0.25, 0]], num_epochs=150, batch_size=64, verbose=0)
+                , LSTMclassifier( num_layers = 1, layer_params=[[0.5, 0.2], [0.25, 0.2]], num_epochs=50 , batch_size=32, verbose=2)# (100, 64) and (50, 32)
                 ]
 
 

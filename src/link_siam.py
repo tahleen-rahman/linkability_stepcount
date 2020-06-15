@@ -7,15 +7,12 @@ random.seed(2)
 import tensorflow as tf
 tf.random.set_seed(3)
 
-max_epochs, regu, batchsize, combi = 300, 0.001, 64, 'l1'
-
-
 from link_utils import linkability_siam
 import sys
 
 
+max_epochs, regu, batchsize, combi = 300, 0.001, 64, 'l1'
 
-exp,  cl , server, weekend = int(sys.argv[1]),  sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
 
 expdict = { 0: (30, 'linkdata_0/', 0.005), # run this on GPU only,
             1: (30, 'linkdata_1/', 0.001),
@@ -24,7 +21,7 @@ expdict = { 0: (30, 'linkdata_0/', 0.005), # run this on GPU only,
             4: (30, 'linkdata_dist/', 0.0)
           }
 
-patience, in_dir, var_th = expdict[exp]
+
 
 clfdict = { 'lstm1' : ([[0.5, 0.2], [0.25, 0.2]]),  # list of size = num of lstm layers [lstm units as frac of inputsize, dropout]
             'lstm2' : ([[16, 0.2]]), #for medium files
@@ -34,27 +31,39 @@ clfdict = { 'lstm1' : ([[0.5, 0.2], [0.25, 0.2]]),  # list of size = num of lstm
             'cnn2'   : ((16, 6), (16, 6), 8, 2)
            }
 
-params = clfdict[cl]
-
-
-config = [max_epochs, patience, regu, batchsize, combi]
-
-
-if server:
-    datapath="../../stepcount/data/dzne/"
-else:
-    datapath="../data/dzne/"
-
-path = datapath + in_dir
-
-from prep_features import *
-
-#path = filter_mornings(path, f=0.25)
-in_path = variance_thresholding(path, th=var_th)
 
 
 
+def link_siamese(exp, cl, server, weekend):
 
-linkability_siam(config, in_path, params, exp, cl, weekend, datapath,  callback=True)
+    patience, in_dir, var_th = expdict[exp]
+    params = clfdict[cl]
 
-#TODO remove high entropy users
+    config = [max_epochs, patience, regu, batchsize, combi]
+
+    if server:
+        datapath="../../stepcount/data/dzne/"
+    else:
+        datapath="../data/dzne/"
+
+    path = datapath + in_dir
+
+
+    from prep_features import *
+
+    in_path = variance_thresholding(path, th=var_th)
+
+
+    linkability_siam(config, in_path, params, exp, cl, weekend, datapath,  callback=True)
+
+
+
+
+if __name__ == '__main__':
+
+    exp, cl, server, weekend = int(sys.argv[1]), sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
+
+    link_siamese(exp, cl, server, weekend)
+
+
+#

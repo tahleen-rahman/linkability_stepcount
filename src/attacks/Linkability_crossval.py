@@ -54,6 +54,7 @@ class Link(Attack):
         else:
             self.pairs = pd.read_csv(self.pairsfilepath)
 
+
         if not unsup:
 
             if not (os.path.exists(self.tr_pairsfilepath) and os.path.exists(self.te_pairsfilepath)):

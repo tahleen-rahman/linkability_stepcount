@@ -2,12 +2,12 @@
 
 import pandas as pd
 import matplotlib.pyplot as plt
-datapath="../data/dzne/plots/"
 
+plot_path = '../../data/paper_plots/'
 
-plt.rcParams["figure.figsize"] = (9,7)
-#plt.rcParams.update({'font.size': 31, 'lines.linewidth': 4})
-plt.rcParams['text.usetex'] = True
+plt.rcParams["figure.figsize"] = (10,7)
+plt.rcParams.update({'font.size': 20, 'lines.linewidth': 2})
+#plt.rcParams['text.usetex'] = True
 
 
 
@@ -114,7 +114,7 @@ def plot_pca(finalDf, finalDf_day):
 
     #plt.subplots_adjust(hspace=0.05, wspace=0.05, right=0.99, top=0.99, bottom=0.13)
 
-    plt.savefig('paper_plots/both_pca_all.pdf', format='pdf')
+    plt.savefig(plot_path + 'both_pca_all.pdf', format='pdf')
     plt.show()
 
 
@@ -131,84 +131,147 @@ def plot_age():
     plt.xlabel('age of users')
     plt.ylabel('number of users')
     plt.tight_layout()
-    plt.savefig('paper_plots/age.pdf', format='pdf')
+    plt.savefig(plot_path + 'age.pdf', format='pdf')
     plt.show()
 
 
-def plot_link(dense, cnn, rf, eucl, cos, lstm, stat):
+
+def plot_link_dist(data_path, plot_path):
+
+    merged = pd.read_csv(data_path + 'link_merged.csv', index_col=0)
+
+    dist = merged[merged.infile.str.contains('dist')]
+
+    dist['binsize'] = pd.to_numeric(dist.infile.str.extract('(\d+)[_][\d+]')[0].values)
+
+    dist['winsize'] = pd.to_numeric(dist.infile.str.extract('[\d+][_](\d+)[_]')[0].values)
+
+    dist = dist.set_index(['binsize', 'winsize']).sort_index()
+
+    dist["dense_mean"].plot( marker="o", label=r'$\mathtt{Dense\_siamese}$',  yerr=dist['dense_std'])
+
+    dist["rf_mean"].plot( marker="v", label=r'$\mathtt{RF\_standard}$',  yerr=dist['rf_std'])
+
+    dist["cos_auc"].plot( marker="^", label=r'$\mathtt{Cosine}$', linestyle=':')
+
+    dist["eucl_auc"].plot( marker="d", label=r'$\mathtt{Euclidean}$',  linestyle=':')
+
+    xtickslabels = dist.infile.str.extract('(\d+[_]\d+)')[0].values
+
+    plt.xticks(pd.np.arange(0, len(dist)), xtickslabels, rotation=45)
+
+    plt.grid(True)
+    plt.xlabel('bin-size_window-size')
+    plt.ylabel('AUC')
+    plt.title("feature: s_dist")
+    plt.legend(ncol=2)
+    plt.tight_layout()
+    #plt.subplots_adjust(right=0.97, top=0.97, bottom=0.1, left=0.05)
+
+    plt.savefig(plot_path + 'dist_link.pdf', format='pdf')
+    plt.show()
+
+
+
+
+def plot_link_stat(stat, data_path, plot_path):
     """
     takes there result dataframes and makes plots for linkability evaluation
-    :param dense:
-    :param cnn:
-    :param rf:
-    :param eucl:
-    :param cos:
-    :param lstm:
+
     :param stat: which statstic to plot
     :return:
     """
 
-    cnn = cnn.drop(["epochs", "regu", "batchsize"], axis=1)
-    lstm = lstm.drop(["epochs", "regu", "batchsize"], axis=1)
-    dense = dense.drop(["epochs", "regu", "batchsize"], axis=1)
-    cos = cos.drop(["clf"], axis=1)
-    eucl = eucl.drop(["clf"], axis=1)
-    #rf = rf.drop(["clf"], axis=1)
+    merged = pd.read_csv(data_path + 'link_merged.csv', index_col=0)
 
-    dense = dense[dense.infile.str.contains(stat)]
-    cnn = cnn[cnn.infile.str.contains(stat)]
-    lstm = lstm[lstm.infile.str.contains(stat)]
-    eucl = eucl[eucl.infile.str.contains(stat)]
-    cos = cos[cos.infile.str.contains(stat)]
-    rf = rf[rf.infile.str.contains(stat)]
+    stat_df = merged[merged.infile.str.contains(stat)]
 
-    joined = dense.merge(eucl, on='infile')
-    joined = joined.merge(cos, on='infile')
-    joined = joined.merge(cnn, on='infile')
-    #joined = joined.merge(lstm, on='infile')
-    joined = joined.merge(rf, on='infile')
+    window = pd.to_numeric(stat_df.infile.str.extract('(\d+)')[0].values)
 
-    norms = joined[joined.infile.str.contains("nor")]
-    joined = joined[~joined.infile.str.contains("nor")]
-
-    xtickslabelss = sorted(pd.to_numeric(joined.infile.str.extract('(\d+)')[0].values))
-
-    joined = joined.set_index(pd.to_numeric(xtickslabelss))
-    joined.sort_index(inplace=True)
-    joined.reset_index(drop=True, inplace=True)
-
-    xticks_ = pd.to_numeric(norms.infile.str.extract('(\d+)')[0].values)
-    norms = norms.set_index(pd.to_numeric(xticks_))
-    norms.sort_index(inplace=True)
-    norms.reset_index(drop=True, inplace=True)
+    stat_df = stat_df.set_index(pd.to_numeric(window))
+    stat_df.sort_index(inplace=True)
+    stat_df.reset_index(drop=True, inplace=True)
 
 
-    joined["dense_auc"].plot( marker="o", label=r'$\mathtt{Dense\_siamese}$', color= 'r')
-    norms["dense_auc"].plot(marker="o", label=r'$\mathtt{Dense\_siamese\_norm}$', linestyle=':', color='r')
+    stat_df["dense_mean"].plot( marker="o", label=r'$\mathtt{Dense\_siamese}$', yerr=stat_df['dense_std'])
 
-    joined["eucl_auc"].plot(marker="d", label=r'$\mathtt{Euclidean}$', color= 'g')
-    norms["eucl_auc"].plot(marker="d", label=r'$\mathtt{Euclidean\_norm}$', linestyle=':', color= 'g')
+    stat_df["rf_mean"].plot( marker="v", label=r'$\mathtt{RF\_standard}$',  yerr=stat_df['rf_std'])
 
-    joined["cos_auc"].plot( marker="^", label=r'$\mathtt{Cosine}$', color='b')
-    norms["cos_auc"].plot( marker="^", label=r'$\mathtt{Cosine\_norm}$', linestyle=':', color= 'b')
 
-    joined["rf_auc"].plot( marker="v", label=r'$\mathtt{RF\_standard}$', color= 'c')
-    norms["rf_auc"].plot( marker="v", label=r'$\mathtt{RF\_standard\_norm}$',linestyle=':', color= 'c')
+    stat_df["cos_auc"].plot( marker="^", label=r'$\mathtt{Cosine}$', linestyle=':')
 
-    joined["cnn_auc"].plot( marker="*", label=r'$\mathtt{CNN\_siamese\_norm}$', color='#A2142F')
-    norms["cnn_auc"].plot( marker="*", label=r'$\mathtt{CNN\_siamese\_norm}$', linestyle=':',color='#A2142F')
+    stat_df["eucl_auc"].plot( marker="d", label=r'$\mathtt{Euclidean}$',  linestyle=':')
 
-    #joined["lstm_auc"].plot(marker="s", label=r'$\mathtt{LSTM\_siamese$', color='m')
-    #norms["lstm_auc"].plot(marker="s", label=r'$\mathtt{CNN\_siamese}$', linestyle=':', color='m')
-
-    plt.xticks(joined.index.values,xtickslabelss)
+    plt.xticks(stat_df.index.values, sorted(window) , rotation=45)
     plt.grid(True)
     plt.xlabel('window size')
     plt.ylabel('AUC')
-    plt.title("feature: s\_"+stat)
-    plt.legend()
+    plt.title("feature: s_"+stat)
+    plt.legend(ncol=2)
     plt.tight_layout()
-    plt.savefig('paper_plots/'+ stat +'_link.pdf', format='pdf')
+    plt.savefig(plot_path + stat +'_link.pdf', format='pdf')
+    plt.show()
+
+
+
+def label_bar(ax, bars, type, infile, **kwargs):
+    """
+    Attach a text label to each bar displaying its y value
+    """
+
+    for i in range(len(bars)):
+
+        bar = bars[i]
+
+        text_x = bar.get_x() + bar.get_width() / 2
+
+        text_y1 = 0.15 #bar.get_height() -
+
+        text = type + " " + infile[i]
+
+        ax.text(text_x, text_y1, text, ha='center', va='bottom', color='white', rotation =90, **kwargs)
+
+        text_y2 = bar.get_height() - 0.06 + 1/(10+i)
+
+        ax.text(text_x, text_y2, "{:.2}".format(bar.get_height()), ha='center', va='bottom', color='black', fontsize=13 , **kwargs)
+
+
+
+def plot_top_feats(data_path, plot_path):
+    """
+
+    :return:
+    """
+    fig, ax = plt.subplots()
+
+    merged = pd.read_csv(data_path + 'link_merged.csv', index_col=0)
+
+    ind = pd.np.arange(1, 4)
+
+    for type in  ['dist', 'sum', 'max', 'mean', 'medi']:
+
+        df = merged[merged.infile.str.contains(type)]
+
+        top = df.nlargest(3, ['dense_mean'])[['infile', 'dense_mean', 'dense_std']]
+
+        ind = ind + 4
+
+        bars = ax.bar(ind.tolist(), top.dense_mean, yerr = top.dense_std, zorder=3, label = type)
+
+        label_bar(ax, bars, type, top.infile.str.extract('[_][a-z]+(\d+|_\d_\d+)[_]')[0].values.tolist())
+        #top.infile.str.extract('[_](([a-z]+\d+)|(\d_\d+))[_]')[0].values.tolist()
+
+    plt.ylim(top=0.9)
+    plt.yticks()
+    plt.ylabel('AUC')
+    plt.xlabel("feature extraction methods")
+    ax.axes.xaxis.set_ticklabels([])
+
+    ax.yaxis.grid(zorder=0)
+
+    #ax.legend(ncol=5 , loc='upper center')
+    plt.tight_layout()
+    plt.savefig(plot_path + "top_feats.pdf", bbox_inches="tight", format='pdf')
     plt.show()
 
 
@@ -244,7 +307,7 @@ def plot_embpair(emb1, emb2, cols, step):
     plt.tight_layout()
 
     #plt.subplots_adjust(right=0.99, top=0.99, bottom=0.05, left=0.05)
-    plt.savefig(datapath +  "embpairs.pdf", format='pdf')
+    plt.savefig(plot_path +  "embpairs.pdf", format='pdf')
     print (len(emb1) - 2)
 
 
@@ -277,7 +340,7 @@ def plotdays(epochs):
     plt.xlabel('hour of each day', fontsize=20)
     plt.ylabel("   step count ",  fontsize=20)
     plt.subplots_adjust(hspace=0.2, wspace=0.05, right=0.99, top=0.97, bottom=0.05, left=0.05)
-    plt.savefig(datapath + uid + "stepcount.pdf", format='pdf')
+    plt.savefig(plot_path + uid + "stepcount.pdf", format='pdf')
     plt.show()
 
 

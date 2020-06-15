@@ -1,8 +1,5 @@
-import pandas as pd
 
 from utils.storage import *
-
-
 
 
 
@@ -15,7 +12,7 @@ def csv_to_step_vector(filename, path=DATA_PATH):
 
 
 
-def parse_all_csv_to_stepframe(path=DATA_PATH, desc_file='YangCispa1_plus_files.csv', subfolder='files/'):
+def parse_all_csv_to_stepframe(path=DATA_PATH, desc_file='desc.csv', subfolder='files/'):
     '''
     Parses DZNE provided epoch files and the `desc_file` into a stepframe and saves them as 'dzne' and 'dzne_desc'
     All data is trimmed to size 40320 and users without as many epochs get discarded
