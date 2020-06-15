@@ -1,3 +1,7 @@
+This linkability attack tries to identify whether two observations of stepcount data belong to the same individual.
+In our experiments we focus on daily observations. 
+We run three different types on linkability attacks. The first one is unsupervised and it relies on the distance (under some metric) between feature vectors of different samples. The second attack uses a pairwise vector similarity metric between features of different samples to fit a traditional machine learning classifier, namely, random forest. The third one uses the One Shot Learning method with Siamese networks. 
+
 Project setup:
 1. Create a virtualenv:
 * pip3 install virtualenv
