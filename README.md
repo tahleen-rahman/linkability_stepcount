@@ -26,11 +26,11 @@ USAGE:
 
 or
 * To manually run different  steps from their separate files (to control parameters etc) follow the following steps:
-              1. python3 prep_features.py
-              2. python3 link_siam.py exp cl1 server weekend
-              3. python3 link_baseline.py  exp  cl2 server weekend
-              4. python 3 link_unsupr.py  metric server weekend
-              5. python3 plots.py
+1. python3 prep_features.py
+2. python3 link_siam.py exp cl1 server weekend
+3. python3 link_baseline.py  exp  cl2 server weekend
+4. python 3 link_unsupr.py  metric server weekend
+5. python3 plots.py
 
 
 * Explanation for Parameters exp, cl, server, weekend:
