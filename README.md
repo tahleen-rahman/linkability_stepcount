@@ -33,10 +33,10 @@ To manually run different  steps from their separate files (to control parameter
 
 Explanation for Parameters exp, cl, server, weekend:
 
-1. exp1 - Choose from the expdict keys 0...4 , for the siamese attack, according to the dimensions of features (less epoch patience,  more variance threshold for files with lesser features)
-    dict values are in the format (patience parameter for early stopping, subdir containing features, variance threshold)
+1. exp1 - Choose from the expdict keys 0...4 , for the siamese attack, according to the dimensions of features (less epoch patience,  more variance threshold for files with lesser features).
+*Dict values are in the format (patience parameter for early stopping, subdir containing features, variance threshold)
               
-expdict = { 0: (30, 'linkdata_0/', 0.005),
+*expdict = { 0: (30, 'linkdata_0/', 0.005),
             1: (20, 'linkdata_1/', 0.001),
             2: (10, 'linkdata_2/', 0.0),
             3: (5,  'linkdata_3/', 0.0),
@@ -45,7 +45,8 @@ expdict = { 0: (30, 'linkdata_0/', 0.005),
 
 
 2. cl1 - Choose a classifier for the siamese attack from the dict keys below 
-clfdict = { 'lstm1' : ([[0.5, 0.2], [0.25, 0.2]]),  # list of size = num of lstm layers [lstm units as frac of inputsize, dropout]
+
+*clfdict = { 'lstm1' : ([[0.5, 0.2], [0.25, 0.2]]),  # list of size = num of lstm layers [lstm units as frac of inputsize, dropout]
             'lstm2' : ([[16, 0.2]]), #for medium files
             'lstm3' : ([[8, 0.2]]),  #for the big files
             'cnn1'   : ((16, 6), (16, 6), 8, 1), # layer i (filt size, kernel size) , max poolsize
@@ -58,7 +59,7 @@ clfdict = { 'lstm1' : ([[0.5, 0.2], [0.25, 0.2]]),  # list of size = num of lstm
 
 3. cl2 - Choose a classifier for the supervised baseline attack from the dict keys below 
 
-    clfdict = {'rf': RandomForestClassifier(n_estimators=trees, random_state=0),
+*clfdict = {'rf': RandomForestClassifier(n_estimators=trees, random_state=0),
                'lr': LinearRegression(),
                'svm': svm.SVC(gamma='scale', decision_function_shape='ovo'),
                'lsvc': svm.LinearSVC(max_iter=2000),  # May not converge if training data is not normalized
