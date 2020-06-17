@@ -9,7 +9,7 @@ tf.random.set_seed(3)
 
 from link_utils import linkability_siam
 import sys
-
+from prep_features import *
 
 max_epochs, regu, batchsize, combi = 300, 0.001, 64, 'l1'
 
@@ -47,9 +47,6 @@ def link_siamese(exp, cl, server, weekend):
         datapath="../data/dzne/"
 
     path = datapath + in_dir
-
-
-    from prep_features import *
 
     in_path = variance_thresholding(path, th=var_th)
 
