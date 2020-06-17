@@ -85,7 +85,7 @@ def linkability_siam(config, in_datapath, params, exp, cl, weekend, datapath,cal
 
                     link.vecframe = add_padding(link.vecframe, padding=params[2] ** params[3])
 
-                    clf = CNNsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, params, num_maxpools=params[3])
+                    clf = CNNsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, params)
 
                 elif cl == 'lstm1':
 

@@ -276,12 +276,12 @@ def tensorabs(t):
 
 class CNNsiameseClassifier(SiameseClassifier):
 
-    def __init__(self, num_features, regu, combi, cnn_params, num_maxpools):
+    def __init__(self, num_features, regu, combi, cnn_params):
 
         super().__init__(num_features, regu, combi)
 
 
-        (filt1, ker1), (filt2, ker2), pool = cnn_params
+        (filt1, ker1), (filt2, ker2), pool, num_maxpools = cnn_params
 
         assert (num_maxpools in [1, 2])
 
