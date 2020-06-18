@@ -7,6 +7,7 @@ import os
 import sys
 
 import pandas as pd
+from joblib import Parallel, delayed
 
 from attacks.kerasclassifier import *
 from attacks.Linkability_crossval import Link
@@ -40,7 +41,91 @@ def add_padding(vf, padding):
     return df
 
 
-def linkability_siam(config, in_datapath, params, exp, cl, weekend, datapath,callback=True):
+def core_siamese(infile,params, cl, datapath, in_datapath,callback,aucfname, weekend, max_epochs, patience, regu, batchsize, combi):
+    """
+    core of the siamese model creation for the linkability attacks
+    :param infile:
+    :param params:
+    :param cl:
+    :param datapath:
+    :param in_datapath:
+    :param callback:
+    :param aucfname:
+    :param weekend:
+    :param max_epochs:
+    :param patience:
+    :param regu:
+    :param batchsize:
+    :param combi:
+    :return:
+    """
+
+    if 'vt' in infile and 'nor' in infile:  # only use variance thresholded and normalized files
+
+        print(infile)
+
+        arr = []
+
+        for i in range(0, 5):
+
+            # try:
+
+            link = Link(i, infile, weekend, in_datapath, out_datapath=datapath + 'cv_folds/')
+
+            from sklearn.utils import shuffle
+            link.tr_pairs = shuffle(link.tr_pairs)
+
+            # first define the shared layers
+            if cl == 'cnn1' or cl == 'cnn2':
+
+                link.vecframe = add_padding(link.vecframe, padding=params[2] ** params[3])
+
+                clf = CNNsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, params)
+
+            elif cl == 'lstm1':
+
+                clf = LSTMsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, lstm_params=params, fixed_units=False)
+
+            elif cl == 'lstm2' or cl == 'lstm3':
+
+                clf = LSTMsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, lstm_params=params, fixed_units=True)
+
+            elif cl == 'dense':
+
+                clf = Dense_siameseClassifier(link.vecframe.shape[1] - 2, regu, combi, params)
+
+            # Next combine the layers
+            clf.combine(plot=False)
+
+            if callback:
+                auc = clf.fit_predict_callback(link, batchsize, max_epochs, patience, verbose=2)
+            else:
+                auc = clf.fit_predict(link, batchsize, max_epochs, verbose=2)
+
+            print(infile, i, auc)
+
+            # aucarr.append(auc)
+
+            arr.append([patience, regu, batchsize, i, infile, auc])
+
+            del clf
+
+        # except:
+
+        # print("infile skipped", infile)
+
+        aucs = pd.DataFrame(data=arr)  # , names= epochs, regu,  batchsize, i, infile, auc
+
+        aucs.to_csv(datapath + "results/" + aucfname, mode='a', header=False, index=False)
+
+        print("saved AUCs to " + datapath + "results/" + aucfname)
+
+
+
+
+
+
+def linkability_siam(config, in_datapath, params, exp, cl, weekend, datapath, callback=True, parallelize=False):
     """
 
     :param config: epochs, regu, batchsize, combi
@@ -61,71 +146,19 @@ def linkability_siam(config, in_datapath, params, exp, cl, weekend, datapath,cal
     else:
         aucfname = "weekend_" + "clf_" + str(cl) + "_exp_" + str(exp) + "_cv_siam.csv"
 
-    #aucarr = []
+    if parallelize:
 
-    for infile in os.listdir(in_datapath):
+        threads = len(os.listdir(in_datapath))
+        Parallel(n_jobs=threads)(delayed(core_siamese)(infile,params, cl, datapath, in_datapath,callback,aucfname, weekend, max_epochs, patience, regu, batchsize, combi)
+                                 for infile in os.listdir(in_datapath))
 
-        if 'vt' in infile and 'nor' in infile: #only use variance thresholded and normalized files
 
-            print (infile)
+    else:
 
-            arr=[]
+        for infile in os.listdir(in_datapath):
 
-            for i in range(0, 5):
+            core_siamese(infile,params, cl, datapath, in_datapath,callback,aucfname, weekend, max_epochs, patience, regu, batchsize, combi)
 
-            #try:
-
-                link = Link(i, infile, weekend, in_datapath , out_datapath = datapath + 'cv_folds/')
-
-                from sklearn.utils import shuffle
-                link.tr_pairs = shuffle(link.tr_pairs)
-
-                #first define the shared layers
-                if cl == 'cnn1' or cl == 'cnn2':
-
-                    link.vecframe = add_padding(link.vecframe, padding=params[2] ** params[3])
-
-                    clf = CNNsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, params)
-
-                elif cl == 'lstm1':
-
-                    clf = LSTMsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, lstm_params=params, fixed_units=False)
-
-                elif cl == 'lstm2' or cl == 'lstm3':
-
-                    clf = LSTMsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, lstm_params=params, fixed_units=True)
-
-                elif cl == 'dense':
-
-                    clf = Dense_siameseClassifier(link.vecframe.shape[1] - 2, regu, combi, params)
-
-                #Next combine the layers
-                clf.combine(plot=False)
-
-                if callback:
-                    auc = clf.fit_predict_callback(link, batchsize, max_epochs, patience, verbose=2)
-                else:
-                    auc = clf.fit_predict(link, batchsize, max_epochs,  verbose=2)
-
-                print(infile, i, auc)
-
-                #aucarr.append(auc)
-
-                arr.append([patience, regu, batchsize, i, infile, auc])
-
-                del clf
-
-            #except:
-
-                #print("infile skipped", infile)
-
-            aucs = pd.DataFrame(data=arr)  # , names= epochs, regu,  batchsize, i, infile, auc
-
-            aucs.to_csv(datapath + "results/" + aucfname, mode='a', header=False, index=False)
-
-            print("saved AUCs to " + datapath + "results/" + aucfname)
-
-    #print(aucarr)
 
 
 def linkability_bl(in_path, datapath, cl, clf, exp, weekend):
@@ -239,6 +272,9 @@ def convert(val):
 
 def merge_results():
 
+    cnn1 = pd.read_csv('../data/dzne/results/link_cnn1.csv')#, names = ['fold', 'infile', 'auc'])
+    lstm = pd.read_csv('../data/dzne/results/link_lstm.csv')#, names = ['fold', 'infile', 'auc'])
+
     rf = pd.read_csv('../data/dzne/results/link_rf.csv')#, names = ['fold', 'infile', 'auc'])
     dense = pd.read_csv('../data/dzne/results/siam_dense.csv')#, names = ['epochs', 'regu',  'batchsize', 'fold', 'infile', 'auc'])
     cos = pd.read_csv('../data/dzne/results/link_cos.csv')#,names = ['infile', 'cos_auc'])
@@ -247,18 +283,25 @@ def merge_results():
     ## ensure all aucs are >0.5
     cos['cos_auc'] = cos.cos_auc.apply(convert)
     dense['auc'] = dense.auc.apply(convert)
+    cnn1['auc'] = cnn1.auc.apply(convert)
+    lstm['auc'] = lstm.auc.apply(convert)
     rf['auc'] = rf.auc.apply(convert)
     eucl['eucl_auc'] = eucl.eucl_auc.apply(convert)
 
     rf_res = rf.groupby('infile').auc.agg([pd.np.mean, pd.np.std]).rename(columns={'mean': 'rf_mean', 'std': 'rf_std'})
     dense_res = dense.groupby('infile').auc.agg([pd.np.mean, pd.np.std]).rename(columns={'mean': 'dense_mean', 'std': 'dense_std'})
+    cnn1_res = cnn1.groupby('infile').auc.agg([pd.np.mean, pd.np.std]).rename(columns={'mean': 'cnn1_mean', 'std': 'cnn1_std'})
+    lstm_res = lstm.groupby('infile').auc.agg([pd.np.mean, pd.np.std]).rename(columns={'mean': 'lstm_mean', 'std': 'lstm_std'})
 
 
     dense_rf = dense_res.merge(rf_res, on='infile', how='outer')
     dense_rf_cos = dense_rf.merge(cos, on='infile', how='outer')
     dense_rf_cos_eucl = dense_rf_cos.merge(eucl, on='infile', how='outer')
+    dense_rf_cos_eucl_cnn1 = dense_rf_cos_eucl.merge(cnn1_res, on='infile', how='outer')
+    dense_rf_cos_eucl_cnn1_lstm = dense_rf_cos_eucl_cnn1.merge(lstm_res, on='infile', how='outer')
+
 
     merged_fp = '../data/plotdata/link_merged.csv'
-    dense_rf_cos_eucl.to_csv(merged_fp)
+    dense_rf_cos_eucl_cnn1_lstm.to_csv(merged_fp)
 
     return merged_fp

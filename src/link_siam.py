@@ -34,7 +34,7 @@ clfdict = { 'lstm1' : ([[0.5, 0.2], [0.25, 0.2]]),  # list of size = num of lstm
 
 
 
-def link_siamese(exp, cl, server, weekend):
+def link_siamese(exp, cl, server, weekend, parallelize):
 
     patience, in_dir, var_th = expdict[exp]
     params = clfdict[cl]
@@ -51,16 +51,16 @@ def link_siamese(exp, cl, server, weekend):
     in_path = variance_thresholding(path, th=var_th)
 
 
-    linkability_siam(config, in_path, params, exp, cl, weekend, datapath,  callback=True)
+    linkability_siam(config, in_path, params, exp, cl, weekend, datapath,  callback=True, parallelize=parallelize)
 
 
 
 
 if __name__ == '__main__':
 
-    exp, cl, server, weekend = int(sys.argv[1]), sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
+    exp, cl, server, weekend, parallelize = int(sys.argv[1]), sys.argv[2], int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5])
 
-    link_siamese(exp, cl, server, weekend)
+    link_siamese(exp, cl, server, weekend, parallelize)
 
 
 #
