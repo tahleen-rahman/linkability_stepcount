@@ -51,7 +51,7 @@ clfdict = { 'lstm1' : ([[0.5, 0.2], [0.25, 0.2]]),  # list of size = num of lstm
 """
 
 ### DATA PREP ###
-"""
+
 from prep_features import prep_all
 prep_all(DATA_PATH='../data/dzne/')
 
@@ -75,7 +75,7 @@ link_unsupervised(metric='eucl', server=0, weekend=1)
 from link_utils import merge_results
 merge_results()
 
-"""
+
 
 from utils.plot_utils import plot_link_dist, plot_link_stat, plot_top_feats
 
