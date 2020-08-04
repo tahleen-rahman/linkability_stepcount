@@ -1,5 +1,6 @@
 # Created by rahman at 11:06 2020-02-22 using PyCharm
 import tensorflow as tf
+
 tf.random.set_seed(3)
 
 
@@ -11,7 +12,8 @@ r_init = keras.initializers.Constant(value=0.1)
 
 from tensorflow.keras import backend as K
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
-from tensorflow.keras.layers import Dropout, Dense, Conv1D, MaxPooling1D, Flatten, Reshape, LSTM
+from tensorflow.keras.layers import Dropout, Dense, Conv1D, MaxPooling1D, Flatten, Reshape, LSTM, Bidirectional
+
 from tensorflow.keras import Sequential, utils, Input, Model
 
 #if tf.__version__ != '2.1.0':
@@ -239,14 +241,14 @@ class LSTMsiameseClassifier(SiameseClassifier):
 
             param_0 = lstm_params[0]
 
-            units = param_0[0] if fixed_units else (int(math.floor(num_features * param_0[0])) if num_features >= 4 else 1)
+            units = param_0[0]
 
             shared_nn.add(LSTM(units, return_sequences=True, input_shape=(num_features, 1),\
                                kernel_initializer=k_init, bias_initializer=b_init, recurrent_initializer=r_init))
             shared_nn.add(Dropout(param_0[1]))
 
             param_1 = lstm_params[1]
-            units = param_1[0] if fixed_units else (int(math.floor(num_features * param_1[0])) if num_features >= 4 else 1)
+            units = param_1[0]
 
             shared_nn.add(LSTM(units, kernel_initializer=k_init, bias_initializer=b_init, recurrent_initializer=r_init))
             shared_nn.add(Dropout(param_1[1]))
@@ -265,8 +267,109 @@ class LSTMsiameseClassifier(SiameseClassifier):
         self.l_a = shared_nn(self.sample_a)
         self.l_b = shared_nn(self.sample_b)
 
+import tensorflow as tf
+
+max_len = 200
+rnn_cell_size = 128
+vocab_size=250
+
+class Attention(tf.keras.Model):
+    def __init__(self, units):
+        super(Attention, self).__init__()
+        self.W1 = tf.keras.layers.Dense(units)
+        self.W2 = tf.keras.layers.Dense(units)
+        self.V = tf.keras.layers.Dense(1)
+    def call(self, features, hidden):
+        hidden_with_time_axis = tf.expand_dims(hidden, 1)
+        score = tf.nn.tanh(self.W1(features) + self.W2(hidden_with_time_axis))
+        attention_weights = tf.nn.softmax(self.V(score), axis=1)
+        context_vector = attention_weights * features
+        context_vector = tf.reduce_sum(context_vector, axis=1)
+        return context_vector, attention_weights
 
 
+class BiLSTMsiameseClassifier(SiameseClassifier):
+
+    def __init__(self, num_features, regu, combi, lstm_params, fixed_units=True):
+        super().__init__(num_features, regu, combi)
+
+        shared_nn = Sequential()
+
+        shared_nn.add(Reshape((num_features, 1), input_shape=(num_features,)))
+
+        if len(lstm_params)==2:
+
+            param_0 = lstm_params[0]
+
+            units = param_0[0]
+
+
+            shared_nn.add(Bidirectional(LSTM(units, return_sequences=True, input_shape=(num_features, 1),\
+                               kernel_initializer=k_init, bias_initializer=b_init, recurrent_initializer=r_init)))
+            shared_nn.add(Dropout(param_0[1]))
+
+            param_1 = lstm_params[1]
+            units = param_1[0]
+
+            shared_nn.add(Bidirectional(LSTM(units, kernel_initializer=k_init, bias_initializer=b_init, recurrent_initializer=r_init)))
+            shared_nn.add(Dropout(param_1[1]))
+
+        elif len(lstm_params)==1:
+
+            param_0 = lstm_params[0]
+
+            units = param_0[0] if fixed_units else (int(math.floor(num_features * param_0[0])) if num_features >= 4 else 1)
+
+            shared_nn.add(Bidirectional(LSTM(units,input_shape=(num_features, 1), \
+                               kernel_initializer=k_init, bias_initializer=b_init, recurrent_initializer=r_init)))
+            shared_nn.add(Dropout(param_0[1]))
+
+
+        self.l_a = shared_nn(self.sample_a)
+        self.l_b = shared_nn(self.sample_b)
+
+class BiLSTMsiameseClassifier(SiameseClassifier):
+
+    def __init__(self, num_features, regu, combi, lstm_params, fixed_units=True):
+        super().__init__(num_features, regu, combi)
+
+        sequence_input = tf.keras.layers.Input(shape=(max_len,), dtype='int32')
+
+        embedded_sequences = tf.keras.layers.Embedding(vocab_size, 128, input_length=max_len)(sequence_input)
+
+        lstm = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM
+                                             (rnn_cell_size,
+                                              dropout=0.3,
+                                              return_sequences=True,
+                                              return_state=True,
+                                              recurrent_activation='relu',
+                                              recurrent_initializer='glorot_uniform'), name="bi_lstm_0")(
+            embedded_sequences)
+
+        lstm, forward_h, forward_c, backward_h, backward_c = tf.keras.layers.Bidirectional \
+            (tf.keras.layers.LSTM
+             (rnn_cell_size,
+              dropout=0.2,
+              return_sequences=True,
+              return_state=True,
+              recurrent_activation='relu',
+              recurrent_initializer='glorot_uniform'))(lstm)
+
+        state_h = tf.keras.layers.Concatenate()([forward_h, backward_h])
+        state_c = tf.keras.layers.Concatenate()([forward_c, backward_c])
+
+        #  PROBLEM IN THIS LINE
+        context_vector, attention_weights = Attention(8)(lstm, state_h)
+
+        output = keras.layers.Dense(1, activation='sigmoid')(context_vector)
+
+        model = keras.Model(inputs=sequence_input, outputs=output)
+
+        # summarize layers
+        print(model.summary())
+
+        self.l_a = shared_nn(self.sample_a)
+        self.l_b = shared_nn(self.sample_b)
 
 
 

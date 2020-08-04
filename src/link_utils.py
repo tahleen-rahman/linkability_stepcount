@@ -76,19 +76,21 @@ def core_siamese(infile,params, cl, datapath, in_datapath,callback,aucfname, wee
             link.tr_pairs = shuffle(link.tr_pairs)
 
             # first define the shared layers
-            if cl == 'cnn1' or cl == 'cnn2':
+            if 'cnn' in cl:
 
                 link.vecframe = add_padding(link.vecframe, padding=params[2] ** params[3])
 
                 clf = CNNsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, params)
 
-            elif cl == 'lstm1':
+            elif 'lstm' in cl:
 
-                clf = LSTMsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, lstm_params=params, fixed_units=False)
+                if 'bilstm' in cl:
 
-            elif cl == 'lstm2' or cl == 'lstm3':
+                    clf = BiLSTMsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, lstm_params=params, fixed_units=True)
+
 
                 clf = LSTMsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, lstm_params=params, fixed_units=True)
+
 
             elif cl == 'dense':
 

@@ -18,7 +18,7 @@ expdict = { 0: (30, 'linkdata_0/', 0.005), # run this on GPU only,
             1: (30, 'linkdata_1/', 0.001),
             2: (30, 'linkdata_2/', 0.0),
             3: (5,  'linkdata_3/', 0.0),
-            4: (30, 'linkdata_dist/', 0.0)
+            4: (10, 'linkdata_dist/', 0.0)
           }
 
 
