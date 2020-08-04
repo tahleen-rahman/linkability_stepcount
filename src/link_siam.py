@@ -23,7 +23,7 @@ expdict = { 0: (30, 'linkdata_0/', 0.005), # run this on GPU only,
 
 
 
-clfdict = { 'lstm1' : ([[0.5, 0.2], [0.25, 0.2]]),  # list of size = num of lstm layers [lstm units as frac of inputsize, dropout]
+clfdict = { 'lstm1' : ([[8, 0.2], [8, 0.2]]),  #list of type [lstm units, dropout] of size = num of stacked lstm layers
             'lstm2' : ([[16, 0.2]]), #for medium files
             'lstm3' : ([[8, 0.2]]),  #for the big files
             'cnn1'   : ((16, 6), (16, 6), 8, 1), # layer i (filt size, kernel size) , max poolsize

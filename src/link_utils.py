@@ -88,8 +88,9 @@ def core_siamese(infile,params, cl, datapath, in_datapath,callback,aucfname, wee
 
                     clf = BiLSTMsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, lstm_params=params, fixed_units=True)
 
+                else:
 
-                clf = LSTMsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, lstm_params=params, fixed_units=True)
+                    clf = LSTMsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, lstm_params=params, fixed_units=True)
 
 
             elif cl == 'dense':

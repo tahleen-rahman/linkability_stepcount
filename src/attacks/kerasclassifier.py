@@ -267,25 +267,7 @@ class LSTMsiameseClassifier(SiameseClassifier):
         self.l_a = shared_nn(self.sample_a)
         self.l_b = shared_nn(self.sample_b)
 
-import tensorflow as tf
 
-max_len = 200
-rnn_cell_size = 128
-vocab_size=250
-
-class Attention(tf.keras.Model):
-    def __init__(self, units):
-        super(Attention, self).__init__()
-        self.W1 = tf.keras.layers.Dense(units)
-        self.W2 = tf.keras.layers.Dense(units)
-        self.V = tf.keras.layers.Dense(1)
-    def call(self, features, hidden):
-        hidden_with_time_axis = tf.expand_dims(hidden, 1)
-        score = tf.nn.tanh(self.W1(features) + self.W2(hidden_with_time_axis))
-        attention_weights = tf.nn.softmax(self.V(score), axis=1)
-        context_vector = attention_weights * features
-        context_vector = tf.reduce_sum(context_vector, axis=1)
-        return context_vector, attention_weights
 
 
 class BiLSTMsiameseClassifier(SiameseClassifier):
@@ -328,7 +310,26 @@ class BiLSTMsiameseClassifier(SiameseClassifier):
         self.l_a = shared_nn(self.sample_a)
         self.l_b = shared_nn(self.sample_b)
 
-class BiLSTMsiameseClassifier(SiameseClassifier):
+
+
+class Attention(tf.keras.Model):
+    def __init__(self, units):
+        super(Attention, self).__init__()
+        self.W1 = tf.keras.layers.Dense(units)
+        self.W2 = tf.keras.layers.Dense(units)
+        self.V = tf.keras.layers.Dense(1)
+    def call(self, features, hidden):
+        hidden_with_time_axis = tf.expand_dims(hidden, 1)
+        score = tf.nn.tanh(self.W1(features) + self.W2(hidden_with_time_axis))
+        attention_weights = tf.nn.softmax(self.V(score), axis=1)
+        context_vector = attention_weights * features
+        context_vector = tf.reduce_sum(context_vector, axis=1)
+        return context_vector, attention_weights
+"""
+max_len = 200
+rnn_cell_size = 128
+vocab_size=250
+class AttentionBiLSTMClassifier(SiameseClassifier):
 
     def __init__(self, num_features, regu, combi, lstm_params, fixed_units=True):
         super().__init__(num_features, regu, combi)
@@ -358,7 +359,6 @@ class BiLSTMsiameseClassifier(SiameseClassifier):
         state_h = tf.keras.layers.Concatenate()([forward_h, backward_h])
         state_c = tf.keras.layers.Concatenate()([forward_c, backward_c])
 
-        #  PROBLEM IN THIS LINE
         context_vector, attention_weights = Attention(8)(lstm, state_h)
 
         output = keras.layers.Dense(1, activation='sigmoid')(context_vector)
@@ -368,8 +368,7 @@ class BiLSTMsiameseClassifier(SiameseClassifier):
         # summarize layers
         print(model.summary())
 
-        self.l_a = shared_nn(self.sample_a)
-        self.l_b = shared_nn(self.sample_b)
+"""
 
 
 
