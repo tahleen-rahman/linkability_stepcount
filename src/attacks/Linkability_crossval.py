@@ -10,10 +10,11 @@ import pandas as pd
 class Link(Attack):
 
 
-    def __init__(self, i, vf_fname, weekends, in_datapath,  out_datapath, unsup=False):
+    def __init__(self, i, vf_fname, time_dim, weekends, in_datapath,  out_datapath, unsup=False):
         """
         creates or loads self.tr_pairs and  self.te_pairs
         :param i: cross validation fold
+        time_dim: consider time as a separate dimension or not, used for RNNs
         :param vf_fname: filename name of input vecframe
         :param weekends: whether to remove weekends or not
         :param in_datapath:
@@ -21,7 +22,7 @@ class Link(Attack):
 
         """
 
-        super().__init__(vf_fname, in_datapath)
+        super().__init__(vf_fname, time_dim, in_datapath)
 
         assert('dsp' in self.vf_fname)
         assert('week' not in self.vf_fname)

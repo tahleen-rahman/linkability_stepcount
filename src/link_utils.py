@@ -41,7 +41,8 @@ def add_padding(vf, padding):
     return df
 
 
-def core_siamese(infile,params, cl, datapath, in_datapath,callback,aucfname, weekend, max_epochs, patience, regu, batchsize, combi):
+
+def core_siamese(infile, params, cl, datapath, in_datapath,callback,aucfname, weekend, max_epochs, patience, regu, batchsize, combi, time_dim=0):
     """
     core of the siamese model creation for the linkability attacks
     :param infile:
@@ -60,7 +61,7 @@ def core_siamese(infile,params, cl, datapath, in_datapath,callback,aucfname, wee
     :return:
     """
 
-    if 'vt' in infile and 'nor' in infile:  # only use variance thresholded and normalized files
+    if  'nor' in infile:  # only use variance thresholded and normalized files 'vt' in infile and
 
         print(infile)
 
@@ -70,7 +71,7 @@ def core_siamese(infile,params, cl, datapath, in_datapath,callback,aucfname, wee
 
             # try:
 
-            link = Link(i, infile, weekend, in_datapath, out_datapath=datapath + 'cv_folds/')
+            link = Link(i, infile, time_dim, weekend, in_datapath, out_datapath=datapath + 'cv_folds/')
 
             from sklearn.utils import shuffle
             link.tr_pairs = shuffle(link.tr_pairs)
@@ -80,22 +81,26 @@ def core_siamese(infile,params, cl, datapath, in_datapath,callback,aucfname, wee
 
                 link.vecframe = add_padding(link.vecframe, padding=params[2] ** params[3])
 
-                clf = CNNsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, params)
+                clf = CNNsiameseClassifier(link.vecframe.shape, regu, combi, params)
+
+            elif 'attntn' in cl:
+
+                clf = AttentionBiLSTMClassifier(link.vecframe.shape, regu, combi, time_dim, lstm_params=params, fixed_units=True)
+
 
             elif 'lstm' in cl:
 
                 if 'bilstm' in cl:
 
-                    clf = BiLSTMsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, lstm_params=params, fixed_units=True)
+                    clf = BiLSTMsiameseClassifier(link.vecframe.shape, regu, combi, time_dim, lstm_params=params, fixed_units=True)
 
                 else:
 
-                    clf = LSTMsiameseClassifier(link.vecframe.shape[1] - 2, regu, combi, lstm_params=params, fixed_units=True)
-
+                    clf = LSTMsiameseClassifier(link.vecframe.shape, regu, combi, time_dim, lstm_params=params, fixed_units=True)
 
             elif cl == 'dense':
 
-                clf = Dense_siameseClassifier(link.vecframe.shape[1] - 2, regu, combi, params)
+                clf = Dense_siameseClassifier(link.vecframe.shape, regu, combi, params)
 
             # Next combine the layers
             clf.combine(plot=False)
@@ -105,7 +110,7 @@ def core_siamese(infile,params, cl, datapath, in_datapath,callback,aucfname, wee
             else:
                 auc = clf.fit_predict(link, batchsize, max_epochs, verbose=2)
 
-            print(infile, i, auc)
+            print("infile, cv fold, AUC: ", infile, i, auc)
 
             # aucarr.append(auc)
 

@@ -2,7 +2,7 @@ import os
 
 from sklearn.feature_selection import VarianceThreshold
 
-from compress import Statistics
+from compress import StatisticsSplitter, DistributionsSplitter
 from itertools import combinations, chain
 from utils.data_parser import normalize_vecframe_by_col, load_frame, check_if_vecframe, dump_frame
 
@@ -30,11 +30,26 @@ def make_stats(stats_datapath, combine_stats):
 
             print(st)
 
-            ds = Statistics('dzne_dsp', st, window_size=int(minu * 4), bucket_size=4, data_path=stats_datapath)
+            ds = StatisticsSplitter('dzne_dsp', st, window_size=int(minu * 4), out_path=stats_datapath)
 
             if not os.path.exists(stats_datapath + ds.out_name + ".ftr"):
 
                 ds.compress_save()
+
+
+
+def make_dists(dist_datapath):
+
+    for minu in [ 15, 30, 120]: #60, 180 #  from 60mins as hrs: 1, 2, 3, 6, 12, 24
+
+        for bucket_size in [2, 4, 8]:
+
+            ds = DistributionsSplitter('dzne_dsp', bucket_size, window_size=int(minu * 4), out_path=dist_datapath)
+
+            if not os.path.exists(dist_datapath + ds.out_name + ".ftr"):
+
+                ds.compress_save()
+
 
 
 def filter_mornings(in_path, f):
@@ -114,7 +129,7 @@ def variance_thresholding(in_path, th=0.0):
     return out_path
 
 
-def prep_all(DATA_PATH):
+def prep_all(DATA_PATH, make_dist=False, make_stats=True):
     """
     :param DATA_PATH: path where unprocessed data is located
     :return: the path where the features ready for attack are located
@@ -126,21 +141,35 @@ def prep_all(DATA_PATH):
     from utils.aggregator import daySplitter
     daySplitter('dzne')
 
-    stats_path = DATA_PATH + "statistics/"
 
-    make_stats(stats_path, combine_stats=False)
+    if make_stats:
 
-    path = DATA_PATH + "normalized/"
+        stats_path = DATA_PATH + "statistics/"
+        make_stats(stats_path, combine_stats=False)
 
-    normalize(stats_path,  path)
+        nor_path = DATA_PATH + "normalized/"
+        normalize(stats_path,  nor_path)
+        path = variance_thresholding(nor_path, th=0.0)
+
+        print ("normalized, variance thresholded, stats files saved to", path)
 
     #path = filter_mornings(path, f=0.25)
 
-    path = variance_thresholding(path, th=0.001)
 
-    return path
+    if make_dist:
+
+        dists_path = DATA_PATH + "distributions/"
+        make_dists(dists_path)
+
+        nor_path = DATA_PATH + "linkdata_dist/"
+        normalize(dists_path,  nor_path)
+        path = variance_thresholding(nor_path, th=0.0)
+
+        print ("normalized, variance thresholded, dist files saved to", path)
+
+
 
 
 if __name__ == '__main__':
 
-    print (prep_all(DATA_PATH='../data/dzne/'))
+    prep_all(DATA_PATH='../data/dzne/', make_dist=True, make_stats=False)

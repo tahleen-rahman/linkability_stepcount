@@ -9,9 +9,9 @@ class StatisticsSplitter(Splitter):
     Output is a vector of concatenated steps statistics from each window.
     """
 
-    def __init__(self, vec_name,  stats, window_size=4*60, data_path=DATA_PATH):
+    def __init__(self, vec_name,  stats, window_size, out_path, data_path=DATA_PATH):
 
-        super().__init__(vec_name, window_size, data_path)
+        super().__init__(vec_name, window_size, data_path, out_path)
         self.stats=stats
         if len(stats)>1:
             name = '_'.join(stats)

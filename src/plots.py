@@ -25,11 +25,10 @@ plotdays(epochs)
 
 
 
+
  
 ### plots distribution of users by age in our dataset ###
-plot_age()
-
-
+plot_age(data_path='../data/', plot_path = '../data/paper_plots/')
 
 
 
@@ -47,20 +46,19 @@ pcadf_day = ae.compress_save(emb_size=2)
 
 
 finalDf = pcadf.merge(att, on='user')
-finalDf_day = pcadf.merge(att, on='user')
+finalDf_day = pcadf.merge(att, on='user')"""
 
 #finalDf.to_csv('../data/dzne/pca_week_attributes.csv', index=False)
 
-#finalDf_day = pd.read_csv('../data/dzne/pca_attributes.csv')
-#finalDf = pd.read_csv('../data/dzne/pca_week_attributes.csv')
+finalDf_day = pd.read_csv('../data/dzne/pca_attributes.csv')
+finalDf = pd.read_csv('../data/dzne/pca_week_attributes.csv')
 
-plot_pca(finalDf, finalDf_day)
+plot_pca(finalDf, finalDf_day, plot_path = '../data/paper_plots/')
 
-"""
 
 ### plots for linkability evaluation ###
 
-
+"""
 from link_utils import merge_results
 merge_results()
 
@@ -73,3 +71,4 @@ for stat in ['sum', 'max', 'mean', 'medi']:
 
 
 plot_top_feats(data_path='../data/plotdata/',plot_path = '../data/paper_plots/')
+"""

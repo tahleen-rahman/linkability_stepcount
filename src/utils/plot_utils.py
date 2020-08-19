@@ -11,7 +11,7 @@ plt.rcParams.update({'font.size': 20, 'lines.linewidth': 2})
 
 
 
-def plot_pca(finalDf, finalDf_day):
+def plot_pca(finalDf, finalDf_day, plot_path):
     """
     plots for PCA by attributes for daily and weeklong stepcounts
     :param finalDf: weeklong df
@@ -19,12 +19,12 @@ def plot_pca(finalDf, finalDf_day):
     :return:
     """
 
-    fig, axarr = plt.subplots(2, 3,  sharey=True, sharex=True)
+    fig, axarr = plt.subplots(2, 3,  sharey=True, sharex=True, figsize=(10,7))
     # plt.subplots_adjust(bottom=0.2, top=0.8, left=0.1, right=0.98, wspace=0.05)
 
-    axarr[1,0].set_xlabel('gender', fontsize=15)
-    axarr[0,0].set_ylabel('week', fontsize=15)
-    axarr[1,0].set_ylabel('day', fontsize=15)
+    axarr[1,0].set_xlabel('gender', fontsize=17)
+    axarr[0,0].set_ylabel('week', fontsize=17)
+    axarr[1,0].set_ylabel('day',fontsize=17)
     # axarr[0].set_title('2 component PCA', fontsize = 20)
     targets = ['m', 'f']
     colors = ['b', 'r']
@@ -47,7 +47,7 @@ def plot_pca(finalDf, finalDf_day):
     axarr[0,0].legend(['male', 'female'], loc='lower center', bbox_to_anchor= (0.5, -0.2), ncol=2)
 
 
-    axarr[1,1].set_xlabel('edu', fontsize=15)
+    axarr[1,1].set_xlabel('edu', fontsize=17)
     #axarr[1,1].set_xlabel('day, edu', fontsize=15)
     #axarr[0].set_ylabel('Principal Component 2', fontsize=15)
     # axarr[0].set_title('2 component PCA', fontsize = 20)
@@ -72,7 +72,7 @@ def plot_pca(finalDf, finalDf_day):
     axarr[0,1].legend(targets, loc='lower center', bbox_to_anchor= (0.5, -0.2), ncol=2)
 
 
-    axarr[1,2].set_xlabel('age', fontsize=15)
+    axarr[1,2].set_xlabel('age', fontsize=17)
     #axarr[1,2].set_xlabel('day, age', fontsize=15)
     #axarr[0].set_ylabel('Principal Component 2', fontsize=15)
     # axarr[0].set_title('2 component PCA', fontsize = 20)
@@ -119,13 +119,13 @@ def plot_pca(finalDf, finalDf_day):
 
 
 
-def plot_age():
+def plot_age(data_path, plot_path):
     """
     plots distribution of users by age in our dataset
     :return:
     """
 
-    desc = pd.read_csv('../../data/dzne/dzne_desc.csv')
+    desc = pd.read_csv('/Users/tahleen/Desktop/githubrepos/linkability_stepcount/data/dzne/dzne_desc.csv')
 
     desc.hist(column='age', bins=len(desc.age.unique()))
     plt.xlabel('age of users')
@@ -151,6 +151,10 @@ def plot_link_dist(data_path, plot_path):
     dist["dense_mean"].plot( marker="o", label=r'$\mathtt{Dense\_siamese}$',  yerr=dist['dense_std'])
 
     dist["rf_mean"].plot( marker="v", label=r'$\mathtt{RF\_standard}$',  yerr=dist['rf_std'])
+
+    dist["cnn1_mean"].plot( marker="s", label=r'$\mathtt{CNN\_siamese}$',  yerr=dist['cnn1_std'])
+
+    dist["lstm_mean"].plot( marker="x", label=r'$\mathtt{LSTM\_siamese}$',  yerr=dist['lstm_std'])
 
     dist["cos_auc"].plot( marker="^", label=r'$\mathtt{Cosine}$', linestyle=':')
 
@@ -197,6 +201,9 @@ def plot_link_stat(stat, data_path, plot_path):
 
     stat_df["rf_mean"].plot( marker="v", label=r'$\mathtt{RF\_standard}$',  yerr=stat_df['rf_std'])
 
+    stat_df["cnn1_mean"].plot( marker="s", label=r'$\mathtt{CNN\_siamese}$',  yerr=stat_df['cnn1_std'])
+
+    stat_df["lstm_mean"].plot( marker="x", label=r'$\mathtt{LSTM\_siamese}$',  yerr=stat_df['lstm_std'])
 
     stat_df["cos_auc"].plot( marker="^", label=r'$\mathtt{Cosine}$', linestyle=':')
 
@@ -252,11 +259,20 @@ def plot_top_feats(data_path, plot_path):
 
         df = merged[merged.infile.str.contains(type)]
 
-        top = df.nlargest(3, ['dense_mean'])[['infile', 'dense_mean', 'dense_std']]
+        if type == 'dist':
+            top = df.nlargest(3, ['dense_mean'])[['infile', 'dense_mean', 'dense_std']]
 
-        ind = ind + 4
+            ind = ind + 4
 
-        bars = ax.bar(ind.tolist(), top.dense_mean, yerr = top.dense_std, zorder=3, label = type)
+            bars = ax.bar(ind.tolist(), top.dense_mean, yerr=top.dense_std, zorder=3, label=type)
+
+        else:
+            top = df.nlargest(3, ['cnn1_mean'])[['infile', 'cnn1_mean', 'cnn1_std']]
+
+            ind = ind + 4
+
+            bars = ax.bar(ind.tolist(), top.cnn1_mean, yerr=top.cnn1_std, zorder=3, label=type)
+
 
         label_bar(ax, bars, type, top.infile.str.extract('[_][a-z]+(\d+|_\d_\d+)[_]')[0].values.tolist())
         #top.infile.str.extract('[_](([a-z]+\d+)|(\d_\d+))[_]')[0].values.tolist()

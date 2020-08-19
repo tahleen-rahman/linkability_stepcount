@@ -2,7 +2,8 @@ import json
 import pandas as pd
 import numpy as np
 from keras.models import model_from_json
-
+import regex
+import math
 DATA_PATH = '../data/dzne/'
 
 
@@ -68,7 +69,29 @@ def load_frame(name, data_path=DATA_PATH):
 
     return frame
 
-
+def load_frame_as_3d_nparray(name, window=None, data_path=DATA_PATH):
+    """
+    Reads dataframe (should be stat_ or dist_ file) from the disk from feather format.
+    Then splits it into feature vector of size `window`.
+    :param name: filename without extention, e.g., "stats_dzne_week_max_medi720_nor"
+    :param window: feature vector size, if not given will be infered from `name`
+    :param data_path: path to dzne file, probably should always be '../dzne/'
+    :return: 3d numpy array of shape (num_users, num_feature_vecs, num_feautres)
+    """
+    frame = load_frame(name, data_path)
+    if not window:
+        if 'stats' not in name and 'dist' not in name:
+            raise Exception("Not a stats or dist file, I'm not sure what do you want me to do.")
+        reg = regex.compile("[\d]+")
+        window = int(reg.findall(name)[-1])
+    all_steps = 4 * 60 * 24
+    if 'week' in name:
+        all_steps *= 7
+    num_feature_vecs = math.ceil(all_steps / window)
+    del frame['user']
+    del frame['desc']
+    num_features = frame.shape[1] // num_feature_vecs
+    return frame.values.reshape((frame.shape[0], num_feature_vecs, num_features))
 
 
 """

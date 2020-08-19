@@ -12,7 +12,7 @@ class Splitter(Compressor):
     and applies `single_stat_batch` on each batch
     Output is a vector of concatenated results of `single_stat_batch` from each window.
     """
-    def __init__(self, vec_name, window_size=4*60,  data_path=DATA_PATH, out_path=DATA_PATH):
+    def __init__(self, vec_name, window_size,  data_path, out_path):
         """
 
         :param vec_name: filename

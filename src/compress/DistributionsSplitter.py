@@ -11,7 +11,7 @@ class DistributionsSplitter(Splitter):
     Splits each datapoint (day of each user) into windows (e.g. hours) and transforms them into distributions of steps.
     Output is a vector of concatenated step distributions from each window.
     """
-    def __init__(self, vec_name, bucket_size=4, window_size=4*60,  data_path=DATA_PATH, out_path=DATA_PATH):
+    def __init__(self, vec_name, bucket_size, window_size, out_path, data_path=DATA_PATH):
         """
 
         :param vec_name: filename

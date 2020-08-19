@@ -1,18 +1,18 @@
 # Created by rahman at 11:06 2020-02-22 using PyCharm
 import tensorflow as tf
-
 tf.random.set_seed(3)
-
 
 #if tf.test.is_built_with_cuda or tf.__version__ == '2.1.0':
 from tensorflow import keras
-k_init = keras.initializers.Constant(value=0.1)
+
+k_init = tf.keras.initializers.Constant(value=0.1)
 b_init = keras.initializers.Constant(value=0)
 r_init = keras.initializers.Constant(value=0.1)
 
 from tensorflow.keras import backend as K
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
-from tensorflow.keras.layers import Dropout, Dense, Conv1D, MaxPooling1D, Flatten, Reshape, LSTM, Bidirectional
+from tensorflow.keras.layers import Dropout, Dense, Conv1D, MaxPooling1D, Flatten , LSTM, Bidirectional, Reshape
+
 
 from tensorflow.keras import Sequential, utils, Input, Model
 
@@ -94,17 +94,28 @@ class BinaryDNN:
 
 class SiameseClassifier:
 
-    def __init__(self, num_features, regu, combi):
+    def __init__(self, shape, regu, combi, time_dim=0):
 
-        #self.l_a and self.l_b will be defined in the child constructors
-
-        self.sample_a = Input(shape=(num_features,))
-        self.sample_b = Input(shape=(num_features,))
-
+        self.time_dim = time_dim
         self.regu =  keras.regularizers.l2(regu)
         self.combi = combi
 
+        #self.l_a and self.l_b will be defined in the child constructors
+        if len(shape)==3:
 
+            assert(self.time_dim==1)
+            self.num_features = shape[2]
+            self.num_timesteps = shape[1]
+
+            self.sample_a = Input(shape=(self.num_timesteps, self.num_features))
+            self.sample_b = Input(shape=(self.num_timesteps, self.num_features))
+
+        elif len(shape)==2: #it is an old style vecframe
+
+            self.num_features = shape[1]-2
+
+            self.sample_a = Input(shape=(self.num_features,))
+            self.sample_b = Input(shape=(self.num_features,))
 
 
     def combine(self, plot=False):
@@ -132,11 +143,13 @@ class SiameseClassifier:
 
 
 
-        predictions = Dense(1, activation='sigmoid')(combined)  # logistic regression according to docu
-        # example does not add regularization to prediction layer - so don't do it here as well
+        predictions = Dense(1, activation='sigmoid')(combined)
 
-        self.model = Model(inputs=[self.sample_a, self.sample_b], outputs=predictions)
+        self.model = tf.keras.Model(inputs=[self.sample_a, self.sample_b], outputs=predictions)
+
         self.model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy', tf.keras.metrics.AUC()])
+
+        print(self.model.summary())
 
         if plot:
             plot_model(self.model, to_file='siam.png', show_shapes=True, show_layer_names=True)
@@ -164,28 +177,61 @@ class SiameseClassifier:
 
 
 
-
-
-
     def fit_predict_callback(self, link, batchsize, epochs, patience, verbose=0):
 
         es = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=patience, restore_best_weights=True)
         #mc = ModelCheckpoint('best_model.h5', monitor='val_acc', mode='max', verbose=1, save_best_only=True)
+        print (self.model.layers)
 
+        if self.time_dim: #link.vecframe is actually just a 3d arrary, not dataframe
+            self.model.fit([link.vecframe[link.tr_pairs.i][:, :], link.vecframe[link.tr_pairs.j][:, :]],
+                           link.tr_pairs.label,
+                           batch_size=batchsize, epochs=epochs,
+                           validation_data=(
+                           [link.vecframe[link.te_pairs.i][:, :], link.vecframe[link.te_pairs.j][:, :]],
+                           link.te_pairs.label), verbose=verbose,
+                           callbacks=[es]) #, mc
+            y_pred = self.model.predict(
+                [link.vecframe[link.te_pairs.i][:, :], link.vecframe[link.te_pairs.j][:, :]],
+                verbose=verbose)
 
-        self.model.fit([link.vecframe.loc[link.tr_pairs.i].iloc[:, 2:], link.vecframe.loc[link.tr_pairs.j].iloc[:, 2:]],
+        else:
+
+            self.model.fit([link.vecframe.loc[link.tr_pairs.i].iloc[:, 2:], link.vecframe.loc[link.tr_pairs.j].iloc[:, 2:]],
                        link.tr_pairs.label,
                        batch_size=batchsize, epochs=epochs,
                        validation_data=(
                        [link.vecframe.loc[link.te_pairs.i].iloc[:, 2:], link.vecframe.loc[link.te_pairs.j].iloc[:, 2:]],
                        link.te_pairs.label), verbose=verbose,
                        callbacks=[es]) #, mc
+            y_pred = self.model.predict(
+                [link.vecframe.loc[link.te_pairs.i].iloc[:, 2:], link.vecframe.loc[link.te_pairs.j].iloc[:, 2:]],
+                verbose=verbose)
+
+
+
+
+        #layer_name = 'attention' its layer 8
+        """for layer in self.model.layers[2:]:  # all layer outputs
+
+            print(layer)
+
+            intermediate_layer_model = keras.Model(inputs=self.model.input,
+                                               outputs=layer.output)
+
+            test_a = tf.ones((1,12))
+            test_b = tf.ones((1,12))
+            intermediate_output = intermediate_layer_model.predict([test_a, test_b])
+
+            print (intermediate_output[0])"""
+
 
 
         #saved_model = load_model('best_model.h5')
-        y_pred = self.model.predict(
-            [link.vecframe.loc[link.te_pairs.i].iloc[:, 2:], link.vecframe.loc[link.te_pairs.j].iloc[:, 2:]],
-            verbose=verbose)
+
+
+
+
 
         from sklearn.metrics import roc_auc_score
 
@@ -197,12 +243,12 @@ class SiameseClassifier:
 
 class Dense_siameseClassifier(SiameseClassifier):
 
-    def __init__(self, num_features, regu, combi, dense_params):
+    def __init__(self, shape, regu, combi, dense_params):
 
-        super().__init__(num_features, regu, combi)
+        super().__init__(shape, regu, combi)
 
-        half_num_features = int(math.floor(num_features * dense_params[0]) if num_features>=2 else 1)
-        shared_dense1 = Dense(half_num_features, input_shape=(num_features,),
+        half_num_features = int(math.floor(self.num_features * dense_params[0]) if self.num_features>=2 else 1)
+        shared_dense1 = Dense(half_num_features, input_shape=(self.num_features,),
                               activation='relu') #, kernel_initializer=k_init, bias_initializer=b_init
 
 
@@ -212,7 +258,7 @@ class Dense_siameseClassifier(SiameseClassifier):
         l_a = shared_dense1(self.sample_a)
         l_b = shared_dense1(self.sample_b)
 
-        quater_num_features = int(math.floor(num_features * dense_params[1])if num_features>=4 else 1)
+        quater_num_features = int(math.floor(self.num_features * dense_params[1]) if self.num_features>=4 else 1)
         shared_dense2 = Dense(quater_num_features, input_shape=(half_num_features,),
                               activation='relu') #, kernel_initializer=k_init, bias_initializer=b_init
 
@@ -230,12 +276,12 @@ class Dense_siameseClassifier(SiameseClassifier):
 
 class LSTMsiameseClassifier(SiameseClassifier):
 
-    def __init__(self, num_features, regu, combi, lstm_params, fixed_units=True):
-        super().__init__(num_features, regu, combi)
+    def __init__(self, num_timesteps, regu, combi, time_dim, lstm_params, fixed_units=True):
+        super().__init__(num_timesteps, regu, combi, time_dim)
 
         shared_nn = Sequential()
 
-        shared_nn.add(Reshape((num_features, 1), input_shape=(num_features,)))
+        shared_nn.add(Reshape((num_timesteps, 1), input_shape=(num_timesteps,)))
 
         if len(lstm_params)==2:
 
@@ -243,7 +289,7 @@ class LSTMsiameseClassifier(SiameseClassifier):
 
             units = param_0[0]
 
-            shared_nn.add(LSTM(units, return_sequences=True, input_shape=(num_features, 1),\
+            shared_nn.add(LSTM(units, return_sequences=True, input_shape=(num_timesteps, 1),\
                                kernel_initializer=k_init, bias_initializer=b_init, recurrent_initializer=r_init))
             shared_nn.add(Dropout(param_0[1]))
 
@@ -257,9 +303,9 @@ class LSTMsiameseClassifier(SiameseClassifier):
 
             param_0 = lstm_params[0]
 
-            units = param_0[0] if fixed_units else (int(math.floor(num_features * param_0[0])) if num_features >= 4 else 1)
+            units = param_0[0] if fixed_units else (int(math.floor(num_timesteps * param_0[0])) if num_timesteps >= 4 else 1)
 
-            shared_nn.add(LSTM(units,input_shape=(num_features, 1), \
+            shared_nn.add(LSTM(units,input_shape=(num_timesteps, 1), \
                                kernel_initializer=k_init, bias_initializer=b_init, recurrent_initializer=r_init))
             shared_nn.add(Dropout(param_0[1]))
 
@@ -272,12 +318,12 @@ class LSTMsiameseClassifier(SiameseClassifier):
 
 class BiLSTMsiameseClassifier(SiameseClassifier):
 
-    def __init__(self, num_features, regu, combi, lstm_params, fixed_units=True):
-        super().__init__(num_features, regu, combi)
+    def __init__(self, num_timesteps, regu, combi, lstm_params, fixed_units=True):
+        super().__init__(num_timesteps, regu, combi)
 
         shared_nn = Sequential()
 
-        shared_nn.add(Reshape((num_features, 1), input_shape=(num_features,)))
+        shared_nn.add(Reshape((num_timesteps, 1), input_shape=(num_timesteps,)))
 
         if len(lstm_params)==2:
 
@@ -286,7 +332,7 @@ class BiLSTMsiameseClassifier(SiameseClassifier):
             units = param_0[0]
 
 
-            shared_nn.add(Bidirectional(LSTM(units, return_sequences=True, input_shape=(num_features, 1),\
+            shared_nn.add(Bidirectional(LSTM(units, return_sequences=True, input_shape=(num_timesteps, 1),\
                                kernel_initializer=k_init, bias_initializer=b_init, recurrent_initializer=r_init)))
             shared_nn.add(Dropout(param_0[1]))
 
@@ -300,9 +346,9 @@ class BiLSTMsiameseClassifier(SiameseClassifier):
 
             param_0 = lstm_params[0]
 
-            units = param_0[0] if fixed_units else (int(math.floor(num_features * param_0[0])) if num_features >= 4 else 1)
+            units = param_0[0] if fixed_units else (int(math.floor(num_timesteps * param_0[0])) if num_timesteps >= 4 else 1)
 
-            shared_nn.add(Bidirectional(LSTM(units,input_shape=(num_features, 1), \
+            shared_nn.add(Bidirectional(LSTM(units,input_shape=(num_timesteps, 1), \
                                kernel_initializer=k_init, bias_initializer=b_init, recurrent_initializer=r_init)))
             shared_nn.add(Dropout(param_0[1]))
 
@@ -312,65 +358,154 @@ class BiLSTMsiameseClassifier(SiameseClassifier):
 
 
 
-class Attention(tf.keras.Model):
+"""class Attention(tf.keras.Model):
+
     def __init__(self, units):
         super(Attention, self).__init__()
+
         self.W1 = tf.keras.layers.Dense(units)
         self.W2 = tf.keras.layers.Dense(units)
         self.V = tf.keras.layers.Dense(1)
+
     def call(self, features, hidden):
+
         hidden_with_time_axis = tf.expand_dims(hidden, 1)
         score = tf.nn.tanh(self.W1(features) + self.W2(hidden_with_time_axis))
         attention_weights = tf.nn.softmax(self.V(score), axis=1)
         context_vector = attention_weights * features
         context_vector = tf.reduce_sum(context_vector, axis=1)
         return context_vector, attention_weights
-"""
+
 max_len = 200
 rnn_cell_size = 128
-vocab_size=250
-class AttentionBiLSTMClassifier(SiameseClassifier):
+vocab_size=250"""
 
-    def __init__(self, num_features, regu, combi, lstm_params, fixed_units=True):
-        super().__init__(num_features, regu, combi)
+#https://medium.com/@sanjivgautamofficial/lstm-in-keras-56a59264c0b2
+#https://www.coursera.org/lecture/nlp-sequence-models/attention-model-lSwVa
+#The original idea of attention uses the output of the decoder as h_t, representing "current decoding state".
+# If you think of the "many-to-one" problem as a special case of the "many-to-many" problem, h_t becomes the last hidden state of the encoder.
+#https://github.com/tensorflow/tensorflow/issues/39332
+"""class AttentionBiLSTMClassifier(SiameseClassifier):
 
-        sequence_input = tf.keras.layers.Input(shape=(max_len,), dtype='int32')
+    def __init__(self, num_timesteps, regu, combi, lstm_params, fixed_units=True):
+        super().__init__(num_timesteps, regu, combi)
 
-        embedded_sequences = tf.keras.layers.Embedding(vocab_size, 128, input_length=max_len)(sequence_input)
+        units, dropout = lstm_params[0][0],  lstm_params[0][1]
+        shared = []
 
-        lstm = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM
-                                             (rnn_cell_size,
-                                              dropout=0.3,
-                                              return_sequences=True,
-                                              return_state=True,
-                                              recurrent_activation='relu',
-                                              recurrent_initializer='glorot_uniform'), name="bi_lstm_0")(
-            embedded_sequences)
+        for sample in [self.sample_a, self.sample_b]:
 
-        lstm, forward_h, forward_c, backward_h, backward_c = tf.keras.layers.Bidirectional \
-            (tf.keras.layers.LSTM
-             (rnn_cell_size,
-              dropout=0.2,
-              return_sequences=True,
-              return_state=True,
-              recurrent_activation='relu',
-              recurrent_initializer='glorot_uniform'))(lstm)
+            sample = tf.keras.layers.Reshape((num_timesteps, 1), input_shape=(num_timesteps,))(sample)
 
-        state_h = tf.keras.layers.Concatenate()([forward_h, backward_h])
-        state_c = tf.keras.layers.Concatenate()([forward_c, backward_c])
+            lstm, forward_h, forward_c, backward_h, backward_c = tf.keras.layers.Bidirectional \
+                (tf.keras.layers.LSTM
+                 (units,
+                  dropout= dropout,
+                  return_sequences=True,
+                  return_state=True,
+                  recurrent_activation='relu',
+                  recurrent_initializer='glorot_uniform'))(sample)
 
-        context_vector, attention_weights = Attention(8)(lstm, state_h)
+            state_h = tf.keras.layers.Concatenate()([forward_h, backward_h])
+            #state_c = tf.keras.layers.Concatenate()([forward_c, backward_c])
 
-        output = keras.layers.Dense(1, activation='sigmoid')(context_vector)
+            # Query-value attention of shape [batch_size, Tq, filters].
+            query_value_attention_seq = tf.keras.layers.Attention()([lstm, state_h])
 
-        model = keras.Model(inputs=sequence_input, outputs=output)
+            query_value_attention = tf.keras.layers.GlobalAveragePooling1D()(
+                query_value_attention_seq)
 
-        # summarize layers
-        print(model.summary())
+            #output = keras.layers.Dense(1, activation='sigmoid')(context_vector)
 
+            #model = keras.Model(inputs=sequence_input, outputs=output)
+
+            # summarize layers
+            #print(model.summary())
+            shared.append(query_value_attention)
+
+
+        self.l_a = shared[0]
+        self.l_b = shared[1]
 """
 
+class AttentionBiLSTMClassifier(SiameseClassifier):
 
+    def __init__(self, shape, regu, combi, time_dim, lstm_params, fixed_units=True):
+        super().__init__(shape, regu, combi, time_dim)
+
+
+        units, dropout = lstm_params[0][0],  lstm_params[0][1]
+
+        shared = []
+
+        for sample in [self.sample_a, self.sample_b]:
+
+            sample = tf.keras.layers.Reshape((self.num_timesteps, self.num_features), input_shape=(self.num_timesteps, self.num_features))(sample)
+
+            lstm, forward_h, forward_c, backward_h, backward_c = tf.keras.layers.Bidirectional(LSTM(units,input_shape=(self.num_timesteps, self.num_features), \
+                               kernel_initializer=k_init, bias_initializer=b_init, recurrent_initializer=r_init, return_sequences=True, return_state=True))(sample)
+
+            state_h = tf.keras.layers.Concatenate()([forward_h, backward_h])
+            # state_c = tf.keras.layers.Concatenate()([forward_c, backward_c])
+
+            # Query-value attention of shape [batch_size, Tq, filters].
+            query_value_attention_seq = tf.keras.layers.Attention()([state_h, lstm])
+
+            query_value_attention = tf.keras.layers.GlobalAveragePooling1D()(
+                query_value_attention_seq)
+
+            shared.append(query_value_attention)
+
+        self.l_a = shared[0]
+        self.l_b = shared[1]
+
+def GlobalAttention(hidden_states):
+    # hidden_states.shape = (batch_size, time_steps, hidden_size)
+    hidden_size = int(hidden_states.shape[2])
+    # Inside dense layer
+    #              hidden_states            dot               W            =>           score_first_part
+    # (batch_size, time_steps, hidden_size) dot (hidden_size, hidden_size) => (batch_size, time_steps, hidden_size)
+    # W is the trainable weight matrix of attention
+    # Luong's multiplicative style score
+    score_first_part = Dense(hidden_size, use_bias=False, name='attention_score_vec')(hidden_states)
+    #            score_first_part           dot        last_hidden_state     => attention_weights
+    # (batch_size, time_steps, hidden_size) dot   (batch_size, hidden_size)  => (batch_size, time_steps)
+    h_t = tf.keras.layers.Lambda(lambda x: x[:, -1, :], output_shape=(hidden_size,), name='last_hidden_state')(
+        hidden_states)
+    score = tf.keras.layers.Dot([score_first_part, h_t], [2, 1], name='attention_score')
+    attention_weights = tf.keras.layers.Activation('softmax', name='attention_weight')(score)
+    # (batch_size, time_steps, hidden_size) dot (batch_size, time_steps) => (batch_size, hidden_size)
+    context_vector = tf.keras.layers.Dot([hidden_states, attention_weights], [1, 1], name='context_vector')
+    pre_activation = tf.keras.layers.Concatenate([context_vector, h_t], name='attention_output')
+    attention_vector = Dense(128, use_bias=False, activation='tanh',
+                             name='attention_vector')(
+        pre_activation)
+    return attention_vector
+
+
+class GlobalAttentionBiLSTMClassifier(SiameseClassifier):
+
+    def __init__(self, num_timesteps, regu, combi, lstm_params, fixed_units=True):
+        super().__init__(num_timesteps, regu, combi)
+
+        units, dropout = lstm_params[0][0],  lstm_params[0][1]
+
+        shared = []
+
+        for sample in [self.sample_a, self.sample_b]:
+
+            sample = tf.keras.layers.Reshape((num_timesteps, 1), input_shape=(num_timesteps,))(sample)
+
+            lstm_out = tf.keras.layers.Bidirectional(LSTM(units,input_shape=(num_timesteps, 1), \
+                               kernel_initializer=k_init, bias_initializer=b_init, recurrent_initializer=r_init, return_sequences=True))(sample)
+
+            # Query-value attention of shape [batch_size, Tq, filters].
+            attention = tf.keras.layers.GlobalAttention(lstm_out)
+
+            shared.append(attention)
+
+        self.l_a = shared[0]
+        self.l_b = shared[1]
 
 def tensorabs(t):
     return abs(t)
@@ -378,9 +513,9 @@ def tensorabs(t):
 
 class CNNsiameseClassifier(SiameseClassifier):
 
-    def __init__(self, num_features, regu, combi, cnn_params):
+    def __init__(self, shape, regu, combi, cnn_params):
 
-        super().__init__(num_features, regu, combi)
+        super().__init__(shape, regu, combi)
 
 
         (filt1, ker1), (filt2, ker2), pool, num_maxpools = cnn_params
@@ -390,7 +525,7 @@ class CNNsiameseClassifier(SiameseClassifier):
 
         shared_conv1 = Sequential()
 
-        shared_conv1.add(Reshape((num_features, 1), input_shape=(num_features,)))
+        shared_conv1.add(Reshape((self.num_features, 1), input_shape=(self.num_features,)))
 
         shared_conv1.add(Conv1D(filters=filt1, kernel_size=ker1, activation='relu', kernel_regularizer=self.regu, padding='same'))
 
